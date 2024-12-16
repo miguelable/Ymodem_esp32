@@ -68,10 +68,8 @@
 #define NAK_TIMEOUT             (1000)
 #define MAX_ERRORS              (45)
 
-#define YM_MAX_FILESIZE         (10*1024*1024)
-
-int Ymodem_Receive (FILE *ffd, unsigned int maxsize, char* getname);
-int Ymodem_Transmit (char* sendFileName, unsigned int sizeFile, FILE *ffd);
-
+#define YM_MAX_FILESIZE (10 * 1024 * 1024)
+int Ymodem_Receive(FILE *ffd, unsigned int maxsize, char *getname);
+int Ymodem_Transmit(const char *sendFileName, unsigned int sizeFile, FILE *ffd);
 
 #endif
