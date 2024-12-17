@@ -26,23 +26,21 @@
  * this software.
  */
 
-#include "ymodem.h"
-
-Ymodem::Ymodem() { pinMode(ledPin, OUTPUT); }
+#include "ymodem_esp32.h"
+#include "driver/gpio.h"
+#include "esp_spiffs.h"
+#include "rom/crc.h"
+#include <driver/uart.h>
 
 //----------------------------------
-void Ymodem::LED_toggle() {
+static void IRAM_ATTR LED_toggle() {
 #if YMODEM_LED_ACT
-  static bool state = false;
-  digitalWrite(YMODEM_LED_ACT, state);
-  state = !state;
+  if (GPIO.out & (1 << YMODEM_LED_ACT)) {
+    GPIO.out_w1tc = (1 << YMODEM_LED_ACT);
+  } else {
+    GPIO.out_w1ts = (1 << YMODEM_LED_ACT);
+  }
 #endif
-}
-
-void Ymodem::setLedPin(int pin) {
-  ledPin = pin;
-  // Set the LED pin as an output
-  pinMode(ledPin, OUTPUT);
 }
 
 //------------------------------------------------------------------------
@@ -65,13 +63,12 @@ static unsigned short crc16(const unsigned char *buf, unsigned long count) {
 
 //--------------------------------------------------------------
 static int32_t Receive_Byte(unsigned char *c, uint32_t timeout) {
-  unsigned long start = millis();
-  while (!Serial.available()) {
-    if (millis() - start > timeout) {
-      return -1; // Timeout
-    }
-  }
-  *c = Serial.read();
+  unsigned char ch;
+  int len = uart_read_bytes(EX_UART_NUM, &ch, 1, timeout / portTICK_RATE_MS);
+  if (len <= 0)
+    return -1;
+
+  *c = ch;
   return 0;
 }
 
@@ -84,7 +81,7 @@ static void uart_consume() {
 
 //--------------------------------
 static uint32_t Send_Byte(char c) {
-  Serial.write(c);
+  uart_write_bytes(EX_UART_NUM, &c, 1);
   return 0;
 }
 
@@ -189,7 +186,7 @@ static int32_t Receive_Packet(uint8_t *data, int *length, uint32_t timeout) {
 
 // Receive a file using the ymodem protocol.
 //-----------------------------------------------------------------
-int Ymodem::receive(FILE *ffd, unsigned int maxsize, char *getname) {
+int Ymodem_Receive(FILE *ffd, unsigned int maxsize, char *getname) {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   uint8_t *file_ptr;
   char file_size[128];
@@ -449,8 +446,8 @@ static uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo) {
 }
 
 //------------------------------------------------------------------------
-int Ymodem::transmit(const char *sendFileName, unsigned int sizeFile,
-                     FILE *ffd) {
+int Ymodem_Transmit(const char *sendFileName, unsigned int sizeFile,
+                    FILE *ffd) {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   uint16_t blkNumber;
   unsigned char receivedC;
@@ -478,7 +475,8 @@ int Ymodem::transmit(const char *sendFileName, unsigned int sizeFile,
   Ymodem_PrepareIntialPacket(packet_data, sendFileName, sizeFile);
   do {
     // Send Packet
-    Serial.write((char *)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
+    uart_write_bytes(EX_UART_NUM, (char *)packet_data,
+                     PACKET_SIZE + PACKET_OVERHEAD);
 
     // Wait for Ack
     err = Ymodem_WaitResponse(ACK, 10);
@@ -550,7 +548,8 @@ int Ymodem::transmit(const char *sendFileName, unsigned int sizeFile,
   Ymodem_PrepareLastPacket(packet_data);
   do {
     // Send Packet
-    Serial.write((char *)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
+    uart_write_bytes(EX_UART_NUM, (char *)packet_data,
+                     PACKET_SIZE + PACKET_OVERHEAD);
 
     // Wait for Ack
     err = Ymodem_WaitResponse(ACK, 10);
