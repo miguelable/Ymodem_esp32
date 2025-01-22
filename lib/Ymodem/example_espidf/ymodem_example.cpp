@@ -29,7 +29,7 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "soc/uart_struct.h"
-#include "ymodem.h"
+#include "YmodemCore.h"
 
 // === Maximal file size we can receive in bytes ===
 #define MAX_FILE_SIZE (CONFIG_SPIFFS_SIZE - 0x2000)

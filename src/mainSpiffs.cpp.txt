@@ -23,36 +23,62 @@ void setup()
     Serial.print("Nombre: ");
     Serial.println(file.name());
 
-    // Leer y mostrar los primeros 100 caracteres del archivo
+    // Leer y mostrar todo el contenido del archivo
     Serial.print("Contenido: ");
-    char buffer[101];                                // Buffer para almacenar los caracteres leídos
-    int  bytesRead    = file.readBytes(buffer, 100); // Leer hasta 100 caracteres
-    buffer[bytesRead] = '\0';                        // Asegurarse de que el buffer esté terminado en nulo
-    Serial.println(buffer);
+    while (file.available()) {
+      char buffer[101];                                // Buffer para almacenar los caracteres leídos
+      int  bytesRead    = file.readBytes(buffer, 100); // Leer hasta 100 caracteres
+      buffer[bytesRead] = '\0';                        // Asegurarse de que el buffer esté terminado en nulo
+      Serial.print(buffer);
+    }
+    Serial.println(); // Nueva línea después de mostrar el contenido del archivo
 
     file = root.openNextFile();
   }
 
-  // Eliminar todos los archivos en SPIFFS
+  // Eliminar los archivos vacíos
   root = SPIFFS.open("/");
   file = root.openNextFile();
   while (file) {
-    const char* fileName = file.name();
-    if (fileName && strlen(fileName) > 0) {
-      Serial.print("Eliminando archivo: ");
-      Serial.println(fileName);
-      if (SPIFFS.remove(String("/") + fileName)) {
-        Serial.println("Archivo eliminado exitosamente");
+    if (file.size() == 0) {
+      const char* fileName = file.name();
+      if (fileName && strlen(fileName) > 0) {
+        Serial.print("Eliminando archivo vacío: ");
+        Serial.println(fileName);
+        if (SPIFFS.remove(String("/") + fileName)) {
+          Serial.println("Archivo eliminado exitosamente");
+        }
+        else {
+          Serial.println("Error al eliminar el archivo");
+        }
       }
       else {
-        Serial.println("Error al eliminar el archivo");
+        Serial.println("Nombre de archivo no válido");
       }
-    }
-    else {
-      Serial.println("Nombre de archivo no válido");
     }
     file = root.openNextFile();
   }
+
+  // // Eliminar todos los archivos en SPIFFS
+  // root = SPIFFS.open("/");
+  // file = root.openNextFile();
+  // while (file) {
+  //   const char* fileName = file.name();
+  //   if (fileName && strlen(fileName) > 0) {
+  //     Serial.print("Eliminando archivo: ");
+  //     Serial.println(fileName);
+  //     if (SPIFFS.remove(String("/") + fileName)) {
+  //       Serial.println("Archivo eliminado exitosamente");
+  //     }
+  //     else {
+  //       Serial.println("Error al eliminar el archivo");
+  //     }
+  //   }
+  //   else {
+  //     Serial.println("Nombre de archivo no válido");
+  //   }
+  //   file = root.openNextFile();
+  // }
 
   // Listar los archivos en SPIFFS después de la eliminación
   Serial.println("Archivos en SPIFFS después de la eliminación:");

@@ -33,7 +33,7 @@
 #define ABORT2 (0x61) /* 'a' == 0x61, abort by user */
 
 #define NAK_TIMEOUT (1000)
-#define MAX_ERRORS (45)
+#define MAX_ERRORS (100)
 
 #define YM_MAX_FILESIZE (10 * 1024 * 1024)
 

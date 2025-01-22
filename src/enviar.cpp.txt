@@ -42,32 +42,15 @@ void setup()
 
 void loop()
 {
-  static int nfile = 1;
-  char       fname[128];
-  char       send_name[128];
-  int        trans_res = -1;
-
-  // ==== Envío del archivo de vuelta ====
-  sprintf(fname, "/firmware-%d.bin", nfile);
-  sprintf(send_name, "firmware-%d.bin", nfile);
-  // Crear un nuevo archivo y escribir "hola desde el esp32"
-  File newFile = SPIFFS.open("/nuevo_archivo.txt", FILE_WRITE);
-  if (!newFile) {
-    Serial.println("Error al crear el archivo");
-    return;
-  }
-  newFile.print("hola desde el esp32");
-  newFile.close();
-
   // Abrir el nuevo archivo para lectura
-  File ffd = SPIFFS.open("/nuevo_archivo.txt", FILE_READ);
+  File ffd = SPIFFS.open("/firmware-1.bin", FILE_READ);
   if (!ffd) {
     Serial.println("Error al abrir el archivo para lectura");
     return;
   }
 
   // Aquí puedes continuar con el código para enviar el archivo usando Ymodem
-  int result = ymodem.transmit("nuevo_archivo.txt", ffd.size(), ffd);
+  int result = ymodem.transmit((char*)"firmware-1.bin", ffd.size(), ffd);
   ffd.close();
 
   if (result == 0) {
@@ -76,7 +59,5 @@ void loop()
   else {
     Serial.printf("Error en la transferencia. Código de error=%d\n", result);
   }
-
-  nfile++;
   delay(10);
 }

@@ -108,8 +108,7 @@ void loop()
     else
       Serial.printf("Error al abrir el archivo \"%s\" para recibir.\n", fname);
 
-    delay(5000);
-    nfile++;
+    delay(1000);
   }
   else {
     Serial.printf("Sistema de archivos lleno. Espacio restante: %u bytes\n", max_fsize);
