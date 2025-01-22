@@ -303,195 +303,6 @@ int Ymodem::getLedPin()
   return ledPin;
 }
 
-/**
- * @brief Receives a file using the Ymodem protocol.
- *
- * This function handles the reception of a file over a Ymodem connection.
- * It processes packets, handles errors, and writes the received data to the specified file.
- *
- * @param ffd Reference to the file object where the received data will be written.
- * @param maxsize Maximum allowed size of the file to be received.
- * @param getname Pointer to a character array where the received file name will be stored.
- * @return int The size of the received file in bytes, or a negative error code:
- *         - -1: Abort by sender
- *         - -2: Too many errors
- *         - -3: Packet sequence error
- *         - -4: Invalid file size
- *         - -5: Filename packet error
- *         - -6: File write error
- *         - -7: User abort
- *         - -8: Timeout
- *         - -9: File size exceeds maxsize
- */
-int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
-{
-  uint8_t      packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  uint8_t*     file_ptr;
-  char         file_size[128];
-  unsigned int i, file_len, write_len, session_done, file_done, packets_received, errors, size = 0;
-  int          packet_length = 0;
-  file_len                   = 0;
-  int eof_cnt                = 0;
-
-  for (session_done = 0, errors = 0;;) {
-    for (packets_received = 0, file_done = 0;;) {
-      LED_toggle();
-      switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT)) {
-        case 0: // normal return
-          switch (packet_length) {
-            case -1:
-              // Abort by sender
-              send_ACK();
-              size = -1;
-              goto exit;
-            case -2:
-              // error
-              errors++;
-              if (errors > 5) {
-                send_CA();
-                size = -2;
-                goto exit;
-              }
-              send_NAK();
-              break;
-            case 0:
-              // End of transmission
-              eof_cnt++;
-              if (eof_cnt == 1) {
-                send_NAK();
-              }
-              else {
-                send_ACKCRC16();
-              }
-              break;
-            default:
-              // ** Normal packet **
-              if (eof_cnt > 1) {
-                send_ACK();
-              }
-              else if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0x000000ff)) {
-                errors++;
-                if (errors > 5) {
-                  send_CA();
-                  size = -3;
-                  goto exit;
-                }
-                send_NAK();
-              }
-              else {
-                if (packets_received == 0) {
-                  // ** First packet, Filename packet **
-                  if (packet_data[PACKET_HEADER] != 0) {
-                    errors = 0;
-                    // ** Filename packet has valid data
-                    if (getname) {
-                      for (i = 0, file_ptr = packet_data + PACKET_HEADER; ((*file_ptr != 0) && (i < 64));) {
-                        *getname = *file_ptr++;
-                        getname++;
-                      }
-                      *getname = '\0';
-                    }
-                    for (i = 0, file_ptr = packet_data + PACKET_HEADER; (*file_ptr != 0) && (i < packet_length);) {
-                      file_ptr++;
-                    }
-                    for (i = 0, file_ptr++; (*file_ptr != ' ') && (i < FILE_SIZE_LENGTH);) {
-                      file_size[i++] = *file_ptr++;
-                    }
-                    file_size[i++] = '\0';
-                    if (strlen(file_size) > 0)
-                      size = strtol(file_size, NULL, 10);
-                    else
-                      size = 0;
-
-                    // Test the size of the file
-                    if ((size < 1) || (size > maxsize)) {
-                      // End session
-                      send_CA();
-                      if (size > maxsize)
-                        size = -9;
-                      else
-                        size = -4;
-                      goto exit;
-                    }
-
-                    file_len = 0;
-                    send_ACKCRC16();
-                  }
-                  // Filename packet is empty, end session
-                  else {
-                    errors++;
-                    if (errors > 5) {
-                      send_CA();
-                      size = -5;
-                      goto exit;
-                    }
-                    send_NAK();
-                  }
-                }
-                else {
-                  // ** Data packet **
-                  // Write received data to file
-                  if (file_len < size) {
-                    file_len += packet_length; // total bytes received
-                    if (file_len > size) {
-                      write_len = packet_length - (file_len - size);
-                      file_len  = size;
-                    }
-                    else
-                      write_len = packet_length;
-
-                    int written_bytes = ffd.write(packet_data + PACKET_HEADER, write_len);
-
-                    if (written_bytes != write_len) { // failed
-                      /* End session */
-                      send_CA();
-                      size = -6;
-                      goto exit;
-                    }
-                    LED_toggle();
-                  }
-                  // success
-                  errors = 0;
-                  send_ACK();
-                }
-                packets_received++;
-              }
-          }
-          break;
-        case -2: // user abort
-          send_CA();
-          size = -7;
-          goto exit;
-        default: // timeout
-          if (eof_cnt > 1) {
-            file_done = 1;
-          }
-          else {
-            errors++;
-            if (errors > MAX_ERRORS) {
-              send_CA();
-              size = -8;
-              goto exit;
-            }
-            send_CRC16();
-          }
-      }
-      if (file_done != 0) {
-        session_done = 1;
-        break;
-      }
-    }
-    if (session_done != 0)
-      break;
-  }
-exit:
-#if YMODEM_LED_ACT
-  digitalWrite(ledPin, YMODEM_LED_ACT_ON ^ 1);
-#endif
-  return size;
-}
-
-//------------------------------------------------------------------------
 int Ymodem::transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd)
 {
   uint8_t       packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
@@ -613,4 +424,212 @@ int Ymodem::transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd)
   digitalWrite(YMODEM_LED_ACT, YMODEM_LED_ACT_ON ^ 1);
 #endif
   return 0; // file transmitted successfully
+}
+
+int processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size, unsigned int* errors)
+{
+  static unsigned int file_len = 0;
+
+  if (file_len < file_size) {
+    unsigned int write_len = packet_length;
+    file_len += packet_length;
+    if (file_len > file_size) {
+      write_len -= (file_len - file_size);
+      file_len = file_size;
+    }
+
+    int written_bytes = ffd.write(packet_data + PACKET_HEADER, write_len);
+    if (written_bytes != write_len) {
+      send_CA();
+      return -6;
+    }
+    LED_toggle();
+  }
+  send_ACK();
+  return 0;
+}
+
+void handleEOFPacket(unsigned int* file_done, unsigned int* errors)
+{
+  static int eof_cnt = 0;
+
+  eof_cnt++;
+  if (eof_cnt == 1) {
+    send_NAK();
+  }
+  else {
+    send_ACK();
+    *file_done = 1;
+  }
+}
+
+void extractFileInfo(uint8_t* packet_data, char* getname, int* size)
+{
+  char         file_size[128];
+  unsigned int i        = 0;
+  uint8_t*     file_ptr = packet_data + PACKET_HEADER;
+
+  // Extraer el nombre del archivo
+  if (getname) {
+    while ((*file_ptr != 0) && (i < 64)) { // Máximo 64 caracteres para el nombre
+      *getname = *file_ptr++;
+      getname++;
+      i++;
+    }
+    *getname = '\0'; // Terminar la cadena
+  }
+
+  // Saltar el nombre del archivo y buscar el tamaño
+  while ((*file_ptr != 0) && (file_ptr < packet_data + PACKET_1K_SIZE)) {
+    file_ptr++;
+  }
+  file_ptr++; // Saltar el byte nulo después del nombre
+
+  // Extraer el tamaño del archivo
+  i = 0;
+  while ((*file_ptr != ' ') && (i < sizeof(file_size) - 1)) { // Leer hasta el espacio
+    file_size[i++] = *file_ptr++;
+  }
+  file_size[i] = '\0'; // Terminar la cadena
+
+  // Convertir el tamaño del archivo de texto a entero
+  if (strlen(file_size) > 0) {
+    *size = strtol(file_size, NULL, 10); // Base 10
+  }
+  else {
+    *size = 0; // Si no hay tamaño, se interpreta como 0
+  }
+}
+
+int processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors)
+{
+  if (packet_data[PACKET_HEADER] != 0) { // Paquete válido
+    extractFileInfo(packet_data, getname, size);
+    if (*size < 1 || *size > maxsize) {
+      send_CA();
+      return (*size > maxsize) ? -9 : -4;
+    }
+    send_ACKCRC16();
+    return 0;
+  }
+  else { // Paquete de encabezado vacío
+    (*errors)++;
+    if (*errors > 5) {
+      send_CA();
+      return -5;
+    }
+    send_NAK();
+    return 0;
+  }
+}
+
+void Ymodem::finalizeSession()
+{
+#if YMODEM_LED_ACT
+  digitalWrite(ledPin, YMODEM_LED_ACT_ON ^ 1);
+#endif
+}
+
+int processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname, unsigned int packets_received,
+                  int* size, unsigned int* file_done, unsigned int* errors)
+{
+  if (packet_length == 0) { // Paquete EOF
+    handleEOFPacket(file_done, errors);
+    return 0;
+  }
+  else if (packet_length == -1) { // Abortado por transmisor
+    send_ACK();
+    return -1;
+  }
+  else if (packet_length == -2) { // Error de recepción
+    (*errors)++;
+    if (*errors > 5) {
+      send_CA();
+      return -2;
+    }
+    send_NAK();
+    return 0;
+  }
+
+  // Paquete normal
+  if (packets_received == 0) {
+    return processHeaderPacket(packet_data, packet_length, maxsize, getname, size, errors);
+  }
+  else {
+    return processDataPacket(packet_data, packet_length, ffd, *size, errors);
+  }
+}
+
+int handleFileSession(fs::File& ffd, unsigned int maxsize, char* getname, unsigned int* session_done, unsigned int* errors)
+{
+  unsigned int file_done = 0, packets_received = 0;
+  int          size = 0;
+
+  while (!file_done) {
+    LED_toggle();
+    int     packet_length = 0;
+    uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+
+    int result = Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT);
+    if (result == 0) { // Paquete recibido correctamente
+      int process_result = processPacket(packet_data, packet_length, ffd, maxsize, getname, packets_received, &size, &file_done, errors);
+      if (process_result < 0) {
+        return process_result; // Error durante el procesamiento
+      }
+      packets_received++;
+    }
+    else if (result == -2) { // Usuario abortó
+      send_CA();
+      return -7;
+    }
+    else { // Timeout o error
+      (*errors)++;
+      if (*errors > MAX_ERRORS) {
+        send_CA();
+        return -8;
+      }
+      send_CRC16();
+    }
+  }
+
+  *session_done = 1;
+  return size;
+}
+
+/**
+ * @brief Receives a file using the Ymodem protocol.
+ *
+ * This function handles the reception of a file over a Ymodem connection.
+ * It processes packets, handles errors, and writes the received data to the specified file.
+ *
+ * @param ffd Reference to the file object where the received data will be written.
+ * @param maxsize Maximum allowed size of the file to be received.
+ * @param getname Pointer to a character array where the received file name will be stored.
+ * @return int The size of the received file in bytes, or a negative error code:
+ *         - -1: Abort by sender
+ *         - -2: Too many errors
+ *         - -3: Packet sequence error
+ *         - -4: Invalid file size
+ *         - -5: Filename packet error
+ *         - -6: File write error
+ *         - -7: User abort
+ *         - -8: Timeout
+ *         - -9: File size exceeds maxsize
+ */
+int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
+{
+  int          size         = 0;
+  unsigned int session_done = 0, errors = 0;
+
+  while (!session_done) {
+    int result = handleFileSession(ffd, maxsize, getname, &session_done, &errors);
+    if (result < 0) {
+      size = result; // Código de error
+      break;
+    }
+    size = result; // Tamaño del archivo recibido
+  }
+
+  finalizeSession();
+  return size;
 }

@@ -91,7 +91,8 @@ public:
   int  getLedPin();
 
 private:
-  int ledPin = YMODEM_LED_ACT;
+  int  ledPin = YMODEM_LED_ACT;
+  void finalizeSession();
 };
 
 #endif // __YMODEM_H__
