@@ -1,4 +1,6 @@
-#include "ymodem.h"
+
+
+#include "YmodemCore.h"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <SPIFFS.h>
@@ -56,7 +58,7 @@ void loop()
       max_fsize = MAX_FILE_SIZE;
     }
 
-    sprintf(fname, "/yfile-%d.bin", nfile);
+    sprintf(fname, "/firmware-%d.bin", nfile);
     File ffd = SPIFFS.open(fname, FILE_WRITE);
     if (ffd) {
       Serial.println("\r\nRecibiendo archivo, inicia la transferencia YModem "

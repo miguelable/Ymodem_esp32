@@ -1,0 +1,82 @@
+#include "YmodemCore.h"
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <SPIFFS.h>
+
+// Define CONFIG_SPIFFS_SIZE with an appropriate value
+#define CONFIG_SPIFFS_SIZE (2 * 1024 * 1024) // 2 MB
+
+#define MAX_FILE_SIZE (CONFIG_SPIFFS_SIZE - 0x2000)
+
+// Instancia de la clase Ymodem
+Ymodem ymodem;
+
+void setup()
+{
+  // Inicialización de Serial para depuración
+  Serial.begin(115200);
+  while (!Serial) {
+    ; // Espera hasta que Serial esté listo
+  }
+
+  // Inicialización de SPIFFS
+  if (!SPIFFS.begin(true)) {
+    Serial.println("Error al montar SPIFFS");
+    return;
+  }
+
+  // Configuración del pin del LED de actividad YModem
+  pinMode(YMODEM_LED_ACT, OUTPUT);
+  digitalWrite(YMODEM_LED_ACT, YMODEM_LED_ACT_ON ^ 1);
+
+  // Configuración de UART (Serial1)
+  Serial1.begin(115200, SERIAL_8N1, 16, 17); // RX, TX pins
+  if (!Serial1) {
+    Serial.println("Error al inicializar Serial1");
+    return;
+  }
+
+  // Mensaje de configuración completa
+  Serial.println("Setup completo. Listo para enviar archivos.");
+}
+
+void loop()
+{
+  static int nfile = 1;
+  char       fname[128];
+  char       send_name[128];
+  int        trans_res = -1;
+
+  // ==== Envío del archivo de vuelta ====
+  sprintf(fname, "/firmware-%d.bin", nfile);
+  sprintf(send_name, "firmware-%d.bin", nfile);
+  // Crear un nuevo archivo y escribir "hola desde el esp32"
+  File newFile = SPIFFS.open("/nuevo_archivo.txt", FILE_WRITE);
+  if (!newFile) {
+    Serial.println("Error al crear el archivo");
+    return;
+  }
+  newFile.print("hola desde el esp32");
+  newFile.close();
+
+  // Abrir el nuevo archivo para lectura
+  File ffd = SPIFFS.open("/nuevo_archivo.txt", FILE_READ);
+  if (!ffd) {
+    Serial.println("Error al abrir el archivo para lectura");
+    return;
+  }
+
+  // Aquí puedes continuar con el código para enviar el archivo usando Ymodem
+  int result = ymodem.transmit("nuevo_archivo.txt", ffd.size(), ffd);
+  ffd.close();
+
+  if (result == 0) {
+    Serial.println("Transferencia completada exitosamente.");
+  }
+  else {
+    Serial.printf("Error en la transferencia. Código de error=%d\n", result);
+  }
+
+  nfile++;
+  delay(10);
+}
