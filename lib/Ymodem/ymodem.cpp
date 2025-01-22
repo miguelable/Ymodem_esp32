@@ -32,30 +32,42 @@
 #include "rom/crc.h"
 #include <driver/uart.h>
 
-Ymodem::Ymodem() { pinMode(ledPin, OUTPUT); }
+Ymodem::Ymodem()
+{
+  pinMode(ledPin, OUTPUT);
+}
 
 //----------------------------------
-static void IRAM_ATTR LED_toggle() {
+static void IRAM_ATTR LED_toggle()
+{
 #if YMODEM_LED_ACT
   if (GPIO.out & (1 << YMODEM_LED_ACT)) {
     GPIO.out_w1tc = (1 << YMODEM_LED_ACT);
-  } else {
+  }
+  else {
     GPIO.out_w1ts = (1 << YMODEM_LED_ACT);
   }
 #endif
 }
 
-void Ymodem::setLedPin(int pin) {
+void Ymodem::setLedPin(int pin)
+{
   ledPin = pin;
   // Set the LED pin as an output
   pinMode(ledPin, OUTPUT);
   log_i("LED pin set to %d", ledPin);
 }
 
+int Ymodem::getLedPin()
+{
+  return ledPin;
+}
+
 //------------------------------------------------------------------------
-static unsigned short crc16(const unsigned char *buf, unsigned long count) {
+static unsigned short crc16(const unsigned char* buf, unsigned long count)
+{
   unsigned short crc = 0;
-  int i;
+  int            i;
 
   while (count--) {
     crc = crc ^ *buf++ << 8;
@@ -71,9 +83,10 @@ static unsigned short crc16(const unsigned char *buf, unsigned long count) {
 }
 
 //--------------------------------------------------------------
-static int32_t Receive_Byte(unsigned char *c, uint32_t timeout) {
+static int32_t Receive_Byte(unsigned char* c, uint32_t timeout)
+{
   unsigned char ch;
-  int len = uart_read_bytes(EX_UART_NUM, &ch, 1, timeout / portTICK_RATE_MS);
+  int           len = uart_read_bytes(EX_UART_NUM, &ch, 1, timeout / portTICK_RATE_MS);
   if (len <= 0)
     return -1;
 
@@ -82,38 +95,51 @@ static int32_t Receive_Byte(unsigned char *c, uint32_t timeout) {
 }
 
 //------------------------
-static void uart_consume() {
+static void uart_consume()
+{
   uint8_t ch[64];
   while (uart_read_bytes(EX_UART_NUM, ch, 64, 100 / portTICK_RATE_MS) > 0)
     ;
 }
 
 //--------------------------------
-static uint32_t Send_Byte(char c) {
+static uint32_t Send_Byte(char c)
+{
   uart_write_bytes(EX_UART_NUM, &c, 1);
   return 0;
 }
 
 //----------------------------
-static void send_CA() {
+static void send_CA()
+{
   Send_Byte(CA);
   Send_Byte(CA);
 }
 
 //-----------------------------
-static void send_ACK() { Send_Byte(ACK); }
+static void send_ACK()
+{
+  Send_Byte(ACK);
+}
 
 //----------------------------------
-static void send_ACKCRC16() {
+static void send_ACKCRC16()
+{
   Send_Byte(ACK);
   Send_Byte(CRC16);
 }
 
 //-----------------------------
-static void send_NAK() { Send_Byte(NAK); }
+static void send_NAK()
+{
+  Send_Byte(NAK);
+}
 
 //-------------------------------
-static void send_CRC16() { Send_Byte(CRC16); }
+static void send_CRC16()
+{
+  Send_Byte(CRC16);
+}
 
 /**
  * @brief  Receive a packet from sender
@@ -129,8 +155,9 @@ static void send_CRC16() { Send_Byte(CRC16); }
  *        -2: abort by user
  */
 //--------------------------------------------------------------------------
-static int32_t Receive_Packet(uint8_t *data, int *length, uint32_t timeout) {
-  int count, packet_size, i;
+static int32_t Receive_Packet(uint8_t* data, int* length, uint32_t timeout)
+{
+  int           count, packet_size, i;
   unsigned char ch;
   *length = 0;
 
@@ -140,36 +167,37 @@ static int32_t Receive_Packet(uint8_t *data, int *length, uint32_t timeout) {
   }
 
   switch (ch) {
-  case SOH:
-    packet_size = PACKET_SIZE;
-    break;
-  case STX:
-    packet_size = PACKET_1K_SIZE;
-    break;
-  case EOT:
-    *length = 0;
-    return 0;
-  case CA:
-    if (Receive_Byte(&ch, timeout) < 0) {
-      return -2;
-    }
-    if (ch == CA) {
-      *length = -1;
+    case SOH:
+      packet_size = PACKET_SIZE;
+      break;
+    case STX:
+      packet_size = PACKET_1K_SIZE;
+      break;
+    case EOT:
+      *length = 0;
       return 0;
-    } else
+    case CA:
+      if (Receive_Byte(&ch, timeout) < 0) {
+        return -2;
+      }
+      if (ch == CA) {
+        *length = -1;
+        return 0;
+      }
+      else
+        return -1;
+    case ABORT1:
+    case ABORT2:
+      return -2;
+    default:
+      vTaskDelay(100 / portTICK_RATE_MS);
+      uart_consume();
       return -1;
-  case ABORT1:
-  case ABORT2:
-    return -2;
-  default:
-    vTaskDelay(100 / portTICK_RATE_MS);
-    uart_consume();
-    return -1;
   }
 
-  *data = (uint8_t)ch;
-  uint8_t *dptr = data + 1;
-  count = packet_size + PACKET_OVERHEAD - 1;
+  *data         = (uint8_t)ch;
+  uint8_t* dptr = data + 1;
+  count         = packet_size + PACKET_OVERHEAD - 1;
 
   for (i = 0; i < count; i++) {
     if (Receive_Byte(&ch, timeout) < 0) {
@@ -179,8 +207,7 @@ static int32_t Receive_Packet(uint8_t *data, int *length, uint32_t timeout) {
     ;
   }
 
-  if (data[PACKET_SEQNO_INDEX] !=
-      ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff)) {
+  if (data[PACKET_SEQNO_INDEX] != ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff)) {
     *length = -2;
     return 0;
   }
@@ -195,157 +222,178 @@ static int32_t Receive_Packet(uint8_t *data, int *length, uint32_t timeout) {
 
 // Receive a file using the ymodem protocol.
 //-----------------------------------------------------------------
-int Ymodem::receive(fs::File &ffd, unsigned int maxsize, char *getname) {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  uint8_t *file_ptr;
-  char file_size[128];
-  unsigned int i, file_len, write_len, session_done, file_done,
-      packets_received, errors, size = 0;
-  int packet_length = 0;
-  file_len = 0;
-  int eof_cnt = 0;
+/**
+ * @brief Receives a file using the Ymodem protocol.
+ *
+ * This function handles the reception of a file over a Ymodem connection.
+ * It processes packets, handles errors, and writes the received data to the specified file.
+ *
+ * @param ffd Reference to the file object where the received data will be written.
+ * @param maxsize Maximum allowed size of the file to be received.
+ * @param getname Pointer to a character array where the received file name will be stored.
+ * @return int The size of the received file in bytes, or a negative error code:
+ *         - -1: Abort by sender
+ *         - -2: Too many errors
+ *         - -3: Packet sequence error
+ *         - -4: Invalid file size
+ *         - -5: Filename packet error
+ *         - -6: File write error
+ *         - -7: User abort
+ *         - -8: Timeout
+ *         - -9: File size exceeds maxsize
+ */
+int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
+{
+  uint8_t      packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  uint8_t*     file_ptr;
+  char         file_size[128];
+  unsigned int i, file_len, write_len, session_done, file_done, packets_received, errors, size = 0;
+  int          packet_length = 0;
+  file_len                   = 0;
+  int eof_cnt                = 0;
 
   for (session_done = 0, errors = 0;;) {
     for (packets_received = 0, file_done = 0;;) {
       LED_toggle();
       switch (Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT)) {
-      case 0: // normal return
-        switch (packet_length) {
-        case -1:
-          // Abort by sender
-          send_ACK();
-          size = -1;
-          goto exit;
-        case -2:
-          // error
-          errors++;
-          if (errors > 5) {
-            send_CA();
-            size = -2;
-            goto exit;
-          }
-          send_NAK();
-          break;
-        case 0:
-          // End of transmission
-          eof_cnt++;
-          if (eof_cnt == 1) {
-            send_NAK();
-          } else {
-            send_ACKCRC16();
-          }
-          break;
-        default:
-          // ** Normal packet **
-          if (eof_cnt > 1) {
-            send_ACK();
-          } else if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) !=
-                     (packets_received & 0x000000ff)) {
-            errors++;
-            if (errors > 5) {
-              send_CA();
-              size = -3;
+        case 0: // normal return
+          switch (packet_length) {
+            case -1:
+              // Abort by sender
+              send_ACK();
+              size = -1;
               goto exit;
-            }
-            send_NAK();
-          } else {
-            if (packets_received == 0) {
-              // ** First packet, Filename packet **
-              if (packet_data[PACKET_HEADER] != 0) {
-                errors = 0;
-                // ** Filename packet has valid data
-                if (getname) {
-                  for (i = 0, file_ptr = packet_data + PACKET_HEADER;
-                       ((*file_ptr != 0) && (i < 64));) {
-                    *getname = *file_ptr++;
-                    getname++;
-                  }
-                  *getname = '\0';
-                }
-                for (i = 0, file_ptr = packet_data + PACKET_HEADER;
-                     (*file_ptr != 0) && (i < packet_length);) {
-                  file_ptr++;
-                }
-                for (i = 0, file_ptr++;
-                     (*file_ptr != ' ') && (i < FILE_SIZE_LENGTH);) {
-                  file_size[i++] = *file_ptr++;
-                }
-                file_size[i++] = '\0';
-                if (strlen(file_size) > 0)
-                  size = strtol(file_size, NULL, 10);
-                else
-                  size = 0;
-
-                // Test the size of the file
-                if ((size < 1) || (size > maxsize)) {
-                  // End session
-                  send_CA();
-                  if (size > maxsize)
-                    size = -9;
-                  else
-                    size = -4;
-                  goto exit;
-                }
-
-                file_len = 0;
+            case -2:
+              // error
+              errors++;
+              if (errors > 5) {
+                send_CA();
+                size = -2;
+                goto exit;
+              }
+              send_NAK();
+              break;
+            case 0:
+              // End of transmission
+              eof_cnt++;
+              if (eof_cnt == 1) {
+                send_NAK();
+              }
+              else {
                 send_ACKCRC16();
               }
-              // Filename packet is empty, end session
-              else {
+              break;
+            default:
+              // ** Normal packet **
+              if (eof_cnt > 1) {
+                send_ACK();
+              }
+              else if ((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0x000000ff)) {
                 errors++;
                 if (errors > 5) {
                   send_CA();
-                  size = -5;
+                  size = -3;
                   goto exit;
                 }
                 send_NAK();
               }
-            } else {
-              // ** Data packet **
-              // Write received data to file
-              if (file_len < size) {
-                file_len += packet_length; // total bytes received
-                if (file_len > size) {
-                  write_len = packet_length - (file_len - size);
-                  file_len = size;
-                } else
-                  write_len = packet_length;
+              else {
+                if (packets_received == 0) {
+                  // ** First packet, Filename packet **
+                  if (packet_data[PACKET_HEADER] != 0) {
+                    errors = 0;
+                    // ** Filename packet has valid data
+                    if (getname) {
+                      for (i = 0, file_ptr = packet_data + PACKET_HEADER; ((*file_ptr != 0) && (i < 64));) {
+                        *getname = *file_ptr++;
+                        getname++;
+                      }
+                      *getname = '\0';
+                    }
+                    for (i = 0, file_ptr = packet_data + PACKET_HEADER; (*file_ptr != 0) && (i < packet_length);) {
+                      file_ptr++;
+                    }
+                    for (i = 0, file_ptr++; (*file_ptr != ' ') && (i < FILE_SIZE_LENGTH);) {
+                      file_size[i++] = *file_ptr++;
+                    }
+                    file_size[i++] = '\0';
+                    if (strlen(file_size) > 0)
+                      size = strtol(file_size, NULL, 10);
+                    else
+                      size = 0;
 
-                int written_bytes =
-                    ffd.write(packet_data + PACKET_HEADER, write_len);
+                    // Test the size of the file
+                    if ((size < 1) || (size > maxsize)) {
+                      // End session
+                      send_CA();
+                      if (size > maxsize)
+                        size = -9;
+                      else
+                        size = -4;
+                      goto exit;
+                    }
 
-                if (written_bytes != write_len) { // failed
-                  /* End session */
-                  send_CA();
-                  size = -6;
-                  goto exit;
+                    file_len = 0;
+                    send_ACKCRC16();
+                  }
+                  // Filename packet is empty, end session
+                  else {
+                    errors++;
+                    if (errors > 5) {
+                      send_CA();
+                      size = -5;
+                      goto exit;
+                    }
+                    send_NAK();
+                  }
                 }
-                LED_toggle();
+                else {
+                  // ** Data packet **
+                  // Write received data to file
+                  if (file_len < size) {
+                    file_len += packet_length; // total bytes received
+                    if (file_len > size) {
+                      write_len = packet_length - (file_len - size);
+                      file_len  = size;
+                    }
+                    else
+                      write_len = packet_length;
+
+                    int written_bytes = ffd.write(packet_data + PACKET_HEADER, write_len);
+
+                    if (written_bytes != write_len) { // failed
+                      /* End session */
+                      send_CA();
+                      size = -6;
+                      goto exit;
+                    }
+                    LED_toggle();
+                  }
+                  // success
+                  errors = 0;
+                  send_ACK();
+                }
+                packets_received++;
               }
-              // success
-              errors = 0;
-              send_ACK();
+          }
+          break;
+        case -2: // user abort
+          send_CA();
+          size = -7;
+          goto exit;
+        default: // timeout
+          if (eof_cnt > 1) {
+            file_done = 1;
+          }
+          else {
+            errors++;
+            if (errors > MAX_ERRORS) {
+              send_CA();
+              size = -8;
+              goto exit;
             }
-            packets_received++;
+            send_CRC16();
           }
-        }
-        break;
-      case -2: // user abort
-        send_CA();
-        size = -7;
-        goto exit;
-      default: // timeout
-        if (eof_cnt > 1) {
-          file_done = 1;
-        } else {
-          errors++;
-          if (errors > MAX_ERRORS) {
-            send_CA();
-            size = -8;
-            goto exit;
-          }
-          send_CRC16();
-        }
       }
       if (file_done != 0) {
         session_done = 1;
@@ -363,8 +411,8 @@ exit:
 }
 
 //------------------------------------------------------------------------------------
-static void Ymodem_PrepareIntialPacket(uint8_t *data, char *fileName,
-                                       uint32_t length) {
+static void Ymodem_PrepareIntialPacket(uint8_t* data, char* fileName, uint32_t length)
+{
   uint16_t tempCRC;
 
   memset(data, 0, PACKET_SIZE + PACKET_HEADER);
@@ -374,24 +422,22 @@ static void Ymodem_PrepareIntialPacket(uint8_t *data, char *fileName,
   data[2] = 0xff;
 
   // add filename
-  sprintf((char *)(data + PACKET_HEADER), "%s", fileName);
+  sprintf((char*)(data + PACKET_HEADER), "%s", fileName);
 
   // add file site
-  sprintf((char *)(data + PACKET_HEADER +
-                   strlen((char *)(data + PACKET_HEADER)) + 1),
-          "%d", length);
-  data[PACKET_HEADER + strlen((char *)(data + PACKET_HEADER)) + 1 +
-       strlen((char *)(data + PACKET_HEADER +
-                       strlen((char *)(data + PACKET_HEADER)) + 1))] = ' ';
+  sprintf((char*)(data + PACKET_HEADER + strlen((char*)(data + PACKET_HEADER)) + 1), "%d", length);
+  data[PACKET_HEADER + strlen((char*)(data + PACKET_HEADER)) + 1 +
+       strlen((char*)(data + PACKET_HEADER + strlen((char*)(data + PACKET_HEADER)) + 1))] = ' ';
 
   // add crc
-  tempCRC = crc16(&data[PACKET_HEADER], PACKET_SIZE);
-  data[PACKET_SIZE + PACKET_HEADER] = tempCRC >> 8;
+  tempCRC                               = crc16(&data[PACKET_HEADER], PACKET_SIZE);
+  data[PACKET_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
 //-------------------------------------------------
-static void Ymodem_PrepareLastPacket(uint8_t *data) {
+static void Ymodem_PrepareLastPacket(uint8_t* data)
+{
   uint16_t tempCRC;
 
   memset(data, 0, PACKET_SIZE + PACKET_HEADER);
@@ -400,13 +446,13 @@ static void Ymodem_PrepareLastPacket(uint8_t *data) {
   data[2] = 0xff;
   tempCRC = crc16(&data[PACKET_HEADER], PACKET_SIZE);
   // tempCRC = crc16_le(0, &data[PACKET_HEADER], PACKET_SIZE);
-  data[PACKET_SIZE + PACKET_HEADER] = tempCRC >> 8;
+  data[PACKET_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
 //-----------------------------------------------------------------------------------------
-static void Ymodem_PreparePacket(uint8_t *data, uint8_t pktNo, uint32_t sizeBlk,
-                                 fs::File &ffd) {
+static void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, fs::File& ffd)
+{
   uint16_t i, size;
   uint16_t tempCRC;
 
@@ -427,28 +473,33 @@ static void Ymodem_PreparePacket(uint8_t *data, uint8_t pktNo, uint32_t sizeBlk,
   }
   tempCRC = crc16(&data[PACKET_HEADER], PACKET_1K_SIZE);
   // tempCRC = crc16_le(0, &data[PACKET_HEADER], PACKET_1K_SIZE);
-  data[PACKET_1K_SIZE + PACKET_HEADER] = tempCRC >> 8;
+  data[PACKET_1K_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_1K_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
 //-------------------------------------------------------------
-static uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo) {
+static uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo)
+{
   unsigned char receivedC;
-  uint32_t errors = 0;
+  uint32_t      errors = 0;
 
   do {
     if (Receive_Byte(&receivedC, NAK_TIMEOUT) == 0) {
       if (receivedC == ackchr) {
         return 1;
-      } else if (receivedC == CA) {
+      }
+      else if (receivedC == CA) {
         send_CA();
         return 2; // CA received, Sender abort
-      } else if (receivedC == NAK) {
+      }
+      else if (receivedC == NAK) {
         return 3;
-      } else {
+      }
+      else {
         return 4;
       }
-    } else {
+    }
+    else {
       errors++;
     }
   } while (errors < tmo);
@@ -456,12 +507,13 @@ static uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo) {
 }
 
 //------------------------------------------------------------------------
-int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  uint16_t blkNumber;
+int Ymodem::transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd)
+{
+  uint8_t       packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  uint16_t      blkNumber;
   unsigned char receivedC;
-  int i, err;
-  uint32_t size = 0;
+  int           i, err;
+  uint32_t      size = 0;
 
   // Wait for response from receiver
   err = 0;
@@ -484,15 +536,15 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
   Ymodem_PrepareIntialPacket(packet_data, sendFileName, sizeFile);
   do {
     // Send Packet
-    uart_write_bytes(EX_UART_NUM, (char *)packet_data,
-                     PACKET_SIZE + PACKET_OVERHEAD);
+    uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
 
     // Wait for Ack
     err = Ymodem_WaitResponse(ACK, 10);
     if (err == 0 || err == 4) {
       send_CA();
       return -2; // timeout or wrong response
-    } else if (err == 2)
+    }
+    else if (err == 2)
       return 98; // abort
     LED_toggle();
   } while (err != 1);
@@ -504,7 +556,7 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
   }
 
   // === Send file blocks ======================================================
-  size = sizeFile;
+  size      = sizeFile;
   blkNumber = 0x01;
 
   // Resend packet if NAK  for a count of 10 else end of communication
@@ -513,8 +565,7 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
     Ymodem_PreparePacket(packet_data, blkNumber, size, ffd);
     do {
       // Send Packet
-      uart_write_bytes(EX_UART_NUM, (char *)packet_data,
-                       PACKET_1K_SIZE + PACKET_OVERHEAD);
+      uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_1K_SIZE + PACKET_OVERHEAD);
 
       // Wait for Ack
       err = Ymodem_WaitResponse(ACK, 10);
@@ -524,10 +575,12 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
           size -= PACKET_1K_SIZE; // Next packet
         else
           size = 0; // Last packet sent
-      } else if (err == 0 || err == 4) {
+      }
+      else if (err == 0 || err == 4) {
         send_CA();
         return -4; // timeout or wrong response
-      } else if (err == 2)
+      }
+      else if (err == 2)
         return -5; // abort
     } while (err != 1);
     LED_toggle();
@@ -541,10 +594,12 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
     err = Ymodem_WaitResponse(ACK, 10);
     if (err == 3) {   // NAK
       Send_Byte(EOT); // Send (EOT)
-    } else if (err == 0 || err == 4) {
+    }
+    else if (err == 0 || err == 4) {
       send_CA();
       return -6; // timeout or wrong response
-    } else if (err == 2)
+    }
+    else if (err == 2)
       return -7; // abort
   } while (err != 1);
 
@@ -558,14 +613,14 @@ int Ymodem::transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd) {
   Ymodem_PrepareLastPacket(packet_data);
   do {
     // Send Packet
-    uart_write_bytes(EX_UART_NUM, (char *)packet_data,
-                     PACKET_SIZE + PACKET_OVERHEAD);
+    uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
     // Wait for Ack
     err = Ymodem_WaitResponse(ACK, 10);
     if (err == 0 || err == 4) {
       send_CA();
       return -9; // timeout or wrong response
-    } else if (err == 2)
+    }
+    else if (err == 2)
       return -10; // abort
   } while (err != 1);
 

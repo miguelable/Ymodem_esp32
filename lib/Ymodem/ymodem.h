@@ -33,7 +33,6 @@
 #include <FS.h>     // Para fs::File
 #include <SPIFFS.h> // Para el sistema de archivos SPIFFS en ESP32
 
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,13 +78,17 @@
 
 #define YM_MAX_FILESIZE (10 * 1024 * 1024)
 
-class Ymodem {
+class Ymodem
+{
 public:
   Ymodem();
   ~Ymodem(){};
+
+  int receive(fs::File& ffd, unsigned int maxsize, char* getname);
+  int transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd);
+
   void setLedPin(int pin);
-  int receive(fs::File &ffd, unsigned int maxsize, char *getname);
-  int transmit(char *sendFileName, unsigned int sizeFile, fs::File &ffd);
+  int  getLedPin();
 
 private:
   int ledPin = YMODEM_LED_ACT;
