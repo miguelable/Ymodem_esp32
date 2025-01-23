@@ -50,7 +50,10 @@ void uart_consume()
 
 uint32_t Send_Byte(char c)
 {
-  uart_write_bytes(EX_UART_NUM, &c, 1);
+  int err = uart_write_bytes(EX_UART_NUM, &c, 1);
+  if (err < 0) {
+    return -1;
+  }
   return 0;
 }
 
@@ -145,4 +148,3 @@ int32_t Receive_Packet(uint8_t* data, int* length, uint32_t timeout)
   *length = packet_size;
   return 0;
 }
-
