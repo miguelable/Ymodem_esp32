@@ -85,7 +85,10 @@ void loop()
             if (Update.end()) {
               if (Update.isFinished()) {
                 Serial.println("Actualización OTA completada. Reiniciando...");
-                ESP.restart();
+                while (1) {
+                  digitalWrite(YMODEM_LED_ACT, YMODEM_LED_ACT_ON ^ 1);
+                  vTaskDelay(100);
+                }
               }
               else
                 Serial.println("Actualización OTA no completada.");

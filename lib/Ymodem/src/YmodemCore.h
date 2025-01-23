@@ -3,11 +3,10 @@
 #define YMODEMCORE_H
 
 #include "YmodemDef.h"
-#include "YmodemReceive.h"
-// #include "YmodemTransmit.h"
 #include "YmodemPaquets.h"
+#include "YmodemReceive.h"
+#include "YmodemTransmit.h"
 #include "YmodemUtils.h"
-
 
 class Ymodem
 {
