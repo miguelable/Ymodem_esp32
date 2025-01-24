@@ -175,7 +175,7 @@ The Ymodem library provides the following error codes for file transmission and 
 
 ### License
 
-This library is licensed under the MIT License. See the LICENSE file for more information.
+This library is licensed under the MIT License. See the [LICENSE](/LICENSE) file for more information.
 
 ### Acknowledgements
 
