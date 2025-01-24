@@ -1,3 +1,16 @@
+/**
+ * @file YmodemTransmit.cpp
+ * @author Miguel Ferrer (mferrer@inbiot.es)
+ * @brief  Ymodem Packet transmission functions
+ * @version 0.1
+ * @date 2025-01-24
+ *
+ * This file contains the functions to transmit files using the Ymodem protocol.
+ * Format the packets and send them to the receiver or wait for the receiver response.
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "YmodemTransmit.h"
 
 int waitForReceiverResponse()

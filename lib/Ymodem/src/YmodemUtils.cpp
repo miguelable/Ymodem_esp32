@@ -1,3 +1,17 @@
+/**
+ * @file YmodemUtils.cpp
+ * @author Miguel Ferrer (mferrer@inbiot.es)
+ * @brief  Ymodem utility functions
+ * @version 0.1
+ * @date 2025-01-24
+ *
+ * This file contains utility functions used in the Ymodem protocol implementation.
+ * These functions provide low-level functionality for sending and receiving data
+ * over a serial connection using the Ymodem protocol.
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "YmodemUtils.h"
 
 void IRAM_ATTR LED_toggle()

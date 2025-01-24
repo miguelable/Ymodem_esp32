@@ -1,0 +1,13 @@
+<map id="YmodemReceive.h" name="YmodemReceive.h">
+<area shape="rect" id="Node000001" title="Ymodem Packet reception functions." alt="" coords="258,5,391,32"/>
+<area shape="rect" id="Node000002" href="$YmodemCore_8h.html" title="Ymodem core functions." alt="" coords="192,80,305,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="302,45,264,82,260,78,299,41"/>
+<area shape="rect" id="Node000006" href="$YmodemReceive_8cpp.html" title="Ymodem Packet reception functions." alt="" coords="329,80,475,107"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="351,41,391,78,387,82,347,45"/>
+<area shape="rect" id="Node000003" href="$ReceiveExample_8cpp.html" title="Example code to receive a file using Ymodem protocol." alt="" coords="5,155,151,181"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="206,116,109,156,107,152,204,111"/>
+<area shape="rect" id="Node000004" href="$TransmitExample_8cpp.html" title="Example code to transmit a file using Ymodem protocol." alt="" coords="174,155,323,181"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="251,122,251,154,246,154,246,122"/>
+<area shape="rect" id="Node000005" href="$YmodemCore_8cpp.html" title="Ymodem core functions." alt="" coords="347,155,473,181"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="292,111,383,152,381,156,289,116"/>
+</map>

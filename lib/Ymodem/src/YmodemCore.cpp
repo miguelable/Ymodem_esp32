@@ -1,3 +1,17 @@
+/**
+ * @file YmodemCore.cpp
+ * @author Miguel Ferrer (mferrer@inbiot.es)
+ * @brief  Ymodem core functions
+ * @version 0.1
+ * @date 2025-01-24
+ *
+ * This file contains the core functions for the Ymodem protocol, including
+ * both file transmission and reception. It provides a high-level interface
+ * for sending and receiving files using the Ymodem protocol.
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "YmodemCore.h"
 
 Ymodem::Ymodem()
@@ -18,6 +32,15 @@ int Ymodem::getLedPin()
   return ledPin;
 }
 
+/**
+ * @brief Finalizes the Ymodem session.
+ *
+ * This function is called to perform any necessary cleanup or finalization
+ * tasks at the end of a Ymodem session. If YMODEM_LED_ACT is defined, it will
+ * toggle the state of the LED connected to the specified pin.
+ *
+ * @note The LED state is toggled by XORing the current state with 1.
+ */
 void Ymodem::finalizeSession()
 {
 #if YMODEM_LED_ACT
@@ -25,26 +48,6 @@ void Ymodem::finalizeSession()
 #endif
 }
 
-/**
- * @brief Receives a file using the Ymodem protocol.
- *
- * This function handles the reception of a file over a Ymodem connection.
- * It processes packets, handles errors, and writes the received data to the specified file.
- *
- * @param ffd Reference to the file object where the received data will be written.
- * @param maxsize Maximum allowed size of the file to be received.
- * @param getname Pointer to a character array where the received file name will be stored.
- * @return int The size of the received file in bytes, or a negative error code:
- *         - -1: Abort by sender
- *         - -2: Too many errors
- *         - -3: Packet sequence error
- *         - -4: Invalid file size
- *         - -5: Filename packet error
- *         - -6: File write error
- *         - -7: User abort
- *         - -8: Timeout
- *         - -9: File size exceeds maxsize
- */
 int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
 {
   int          size         = 0;

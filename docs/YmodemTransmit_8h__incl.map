@@ -1,0 +1,25 @@
+<map id="YmodemTransmit.h" name="YmodemTransmit.h">
+<area shape="rect" id="Node000001" title="Ymodem Packet transmission functions." alt="" coords="332,5,468,32"/>
+<area shape="rect" id="Node000002" href="$YmodemPaquets_8h.html" title="Ymodem Packet preparation functions." alt="" coords="334,80,466,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="403,33,403,64,398,64,398,33"/>
+<area shape="rect" id="Node000003" href="$YmodemUtils_8h.html" title="Ymodem utility functions." alt="" coords="344,155,456,181"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="403,107,403,139,398,139,398,107"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,229,70,256"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="345,181,229,202,85,231,84,226,228,197,344,176"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="94,229,154,256"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="349,185,170,231,169,226,348,179"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="178,229,241,256"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="368,184,257,226,255,221,366,179"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="265,229,330,256"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="384,184,330,222,327,218,381,180"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="354,229,446,256"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="403,182,403,214,398,214,398,182"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="470,229,546,256"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="420,180,478,218,475,222,417,184"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="570,229,620,256"/>
+<area shape="poly" id="edge9_Node000003_Node000010" title=" " alt="" coords="435,179,557,224,555,229,433,184"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="643,229,733,256"/>
+<area shape="poly" id="edge10_Node000003_Node000011" title=" " alt="" coords="451,179,628,224,627,229,450,184"/>
+<area shape="rect" id="Node000012" href="$YmodemDef_8h.html" title="Ymodem protocol definitions and configuration." alt="" coords="757,229,862,256"/>
+<area shape="poly" id="edge11_Node000003_Node000012" title=" " alt="" coords="457,176,742,226,741,231,456,181"/>
+</map>

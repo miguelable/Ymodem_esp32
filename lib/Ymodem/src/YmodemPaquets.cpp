@@ -1,3 +1,16 @@
+/**
+ * @file YmodemPaquets.cpp
+ * @author Miguel Ferrer (mferrer@inbiot.es)
+ * @brief  Ymodem Packet preparation functions
+ * @version 0.1
+ * @date 2025-01-24
+ *
+ * This file contains the functions to prepare the packets for Ymodem file transfer.
+ * It formats the packets with the necessary information for the Ymodem protocol.
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "YmodemPaquets.h"
 
 void Ymodem_PrepareIntialPacket(uint8_t* data, char* fileName, uint32_t length)

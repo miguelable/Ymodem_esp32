@@ -1,3 +1,17 @@
+/**
+ * @file YmodemReceive.cpp
+ * @author Miguel Ferrer (mferrer@inbiot.es)
+ * @brief Ymodem Packet reception functions
+ * @version 0.1
+ * @date 2025-01-24
+ *
+ * This file contains the functions to receive files using the Ymodem protocol.
+ * It processes the incoming packets, extracts the file information, and writes
+ * the data to the filesystem.
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
 #include "YmodemReceive.h"
 
 int processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size, unsigned int* errors)

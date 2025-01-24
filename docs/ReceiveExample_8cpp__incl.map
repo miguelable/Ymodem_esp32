@@ -1,0 +1,40 @@
+<map id="ReceiveExample.cpp" name="ReceiveExample.cpp">
+<area shape="rect" id="Node000001" title="Example code to receive a file using Ymodem protocol." alt="" coords="569,5,714,32"/>
+<area shape="rect" id="Node000002" href="$YmodemCore_8h.html" title="Ymodem core functions." alt="" coords="344,80,456,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="600,35,457,78,456,73,599,30"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="481,80,557,107"/>
+<area shape="poly" id="edge16_Node000001_Node000016" title=" " alt="" coords="621,35,555,74,552,69,619,30"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="581,80,702,107"/>
+<area shape="poly" id="edge17_Node000001_Node000017" title=" " alt="" coords="644,33,644,64,639,64,639,33"/>
+<area shape="rect" id="Node000018" title=" " alt="" coords="726,80,805,107"/>
+<area shape="poly" id="edge18_Node000001_Node000018" title=" " alt="" coords="664,30,732,70,730,74,662,35"/>
+<area shape="rect" id="Node000019" title=" " alt="" coords="830,80,904,107"/>
+<area shape="poly" id="edge19_Node000001_Node000019" title=" " alt="" coords="682,30,816,73,814,78,680,35"/>
+<area shape="rect" id="Node000003" href="$YmodemReceive_8h.html" title="Ymodem Packet reception functions." alt="" coords="257,229,389,256"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="396,108,339,217,334,214,391,106"/>
+<area shape="rect" id="Node000014" href="$YmodemTransmit_8h.html" title="Ymodem Packet transmission functions." alt="" coords="398,155,533,181"/>
+<area shape="poly" id="edge13_Node000002_Node000014" title=" " alt="" coords="414,105,446,141,442,145,410,109"/>
+<area shape="rect" id="Node000004" href="$YmodemUtils_8h.html" title="Ymodem utility functions." alt="" coords="344,304,456,331"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="338,255,378,291,374,295,334,258"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="5,379,70,405"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="345,330,229,351,85,381,84,376,228,346,344,325"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="94,379,154,405"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="349,334,170,380,169,375,348,329"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="178,379,241,405"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="368,334,257,376,255,371,366,329"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="265,379,330,405"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="384,333,330,371,327,367,381,329"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="354,379,446,405"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="403,331,403,363,398,363,398,331"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="470,379,546,405"/>
+<area shape="poly" id="edge9_Node000004_Node000010" title=" " alt="" coords="420,329,478,367,475,372,417,333"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="570,379,620,405"/>
+<area shape="poly" id="edge10_Node000004_Node000011" title=" " alt="" coords="435,329,557,374,555,379,433,334"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="643,379,733,405"/>
+<area shape="poly" id="edge11_Node000004_Node000012" title=" " alt="" coords="451,329,628,373,627,378,450,334"/>
+<area shape="rect" id="Node000013" href="$YmodemDef_8h.html" title="Ymodem protocol definitions and configuration." alt="" coords="757,379,862,405"/>
+<area shape="poly" id="edge12_Node000004_Node000013" title=" " alt="" coords="457,326,742,375,741,381,456,331"/>
+<area shape="rect" id="Node000015" href="$YmodemPaquets_8h.html" title="Ymodem Packet preparation functions." alt="" coords="413,229,545,256"/>
+<area shape="poly" id="edge14_Node000014_Node000015" title=" " alt="" coords="470,181,476,214,471,215,465,182"/>
+<area shape="poly" id="edge15_Node000015_Node000004" title=" " alt="" coords="467,259,427,295,423,291,463,255"/>
+</map>

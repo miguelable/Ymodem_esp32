@@ -1,0 +1,23 @@
+<map id="YmodemPaquets.h" name="YmodemPaquets.h">
+<area shape="rect" id="Node000001" title="Ymodem Packet preparation functions." alt="" coords="334,5,466,32"/>
+<area shape="rect" id="Node000002" href="$YmodemUtils_8h.html" title="Ymodem utility functions." alt="" coords="344,80,456,107"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="403,33,403,64,398,64,398,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,155,70,181"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="345,106,229,127,85,157,84,152,228,122,344,101"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="94,155,154,181"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="349,110,170,156,169,151,348,105"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="178,155,241,181"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="368,110,257,152,255,147,366,105"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="265,155,330,181"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="384,109,330,147,327,143,381,105"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="354,155,446,181"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="403,107,403,139,398,139,398,107"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="470,155,546,181"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="420,105,478,143,475,148,417,109"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="570,155,620,181"/>
+<area shape="poly" id="edge8_Node000002_Node000009" title=" " alt="" coords="435,105,557,150,555,155,433,110"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="643,155,733,181"/>
+<area shape="poly" id="edge9_Node000002_Node000010" title=" " alt="" coords="451,105,628,149,627,154,450,110"/>
+<area shape="rect" id="Node000011" href="$YmodemDef_8h.html" title="Ymodem protocol definitions and configuration." alt="" coords="757,155,862,181"/>
+<area shape="poly" id="edge10_Node000002_Node000011" title=" " alt="" coords="457,102,742,151,741,157,456,107"/>
+</map>
