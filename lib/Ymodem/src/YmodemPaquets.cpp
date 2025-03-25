@@ -13,7 +13,7 @@
  */
 #include "YmodemPaquets.h"
 
-void Ymodem_PrepareIntialPacket(uint8_t* data, char* fileName, uint32_t length)
+void Ymodem_PrepareIntialPacket(uint8_t* data, const char* fileName, uint32_t length)
 {
   uint16_t tempCRC;
 
@@ -51,28 +51,27 @@ void Ymodem_PrepareLastPacket(uint8_t* data)
   data[PACKET_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
-void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, fs::File& ffd)
+void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, const uint8_t* buffer)
 {
-  uint16_t i, size;
+  uint16_t i;
   uint16_t tempCRC;
 
   data[0] = STX;
   data[1] = (pktNo & 0x000000ff);
   data[2] = (~(pktNo & 0x000000ff));
 
-  size = sizeBlk < PACKET_1K_SIZE ? sizeBlk : PACKET_1K_SIZE;
-  // Read block from file
-  if (size > 0) {
-    size = ffd.read(data + PACKET_HEADER, size);
-  }
+  // Copiar los datos del buffer al paquete
+  memcpy(data + PACKET_HEADER, buffer, sizeBlk);
 
-  if (size < PACKET_1K_SIZE) {
-    for (i = size + PACKET_HEADER; i < PACKET_1K_SIZE + PACKET_HEADER; i++) {
-      data[i] = 0x00; // EOF (0x1A) or 0x00
+  // Rellenar con ceros si el bloque es menor que PACKET_1K_SIZE
+  if (sizeBlk < PACKET_1K_SIZE) {
+    for (i = sizeBlk + PACKET_HEADER; i < PACKET_1K_SIZE + PACKET_HEADER; i++) {
+      data[i] = 0x00; // EOF (0x1A) o 0x00
     }
   }
-  tempCRC = crc16(&data[PACKET_HEADER], PACKET_1K_SIZE);
-  // tempCRC = crc16_le(0, &data[PACKET_HEADER], PACKET_1K_SIZE);
+
+  // Calcular el CRC
+  tempCRC                                  = crc16(&data[PACKET_HEADER], PACKET_1K_SIZE);
   data[PACKET_1K_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_1K_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }

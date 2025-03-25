@@ -31,7 +31,7 @@ int waitForReceiverResponse()
   return 0;
 }
 
-int sendInitialPacket(char* sendFileName, unsigned int sizeFile)
+int sendInitialPacket(const char* sendFileName, unsigned int sizeFile)
 {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   int     err;
@@ -61,40 +61,50 @@ int sendInitialPacket(char* sendFileName, unsigned int sizeFile)
   return 0;
 }
 
-int sendFileBlocks(unsigned int sizeFile, fs::File& ffd)
+int sendFileBlocks(const char* fileName, FileSystem& fs)
 {
   uint8_t  packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  uint8_t  buffer[PACKET_1K_SIZE]; // Buffer para leer datos del archivo
   uint16_t blkNumber = 0x01;
   int      err;
-  uint32_t size = sizeFile;
+  size_t   offset   = 0;
+  size_t   fileSize = fs.getFileSize(fileName); // Obtener el tamaño del archivo
 
-  while (size) {
-    // Prepare and send next packet
-    Ymodem_PreparePacket(packet_data, blkNumber, size, ffd);
+  while (fileSize > 0) {
+    // Leer datos del archivo en bloques
+    size_t bytesToRead = (fileSize > PACKET_1K_SIZE) ? PACKET_1K_SIZE : fileSize;
+    err                = fs.readFromFile(fileName, buffer, bytesToRead, offset);
+    if (err != LITTLEFS_OK) {
+      log_e("Failed to read file: %s", fileName);
+      send_CA();
+      return -2; // Error al leer el archivo
+    }
+
+    // Preparar el paquete con los datos leídos
+    Ymodem_PreparePacket(packet_data, blkNumber, bytesToRead, buffer);
+
+    // Enviar el paquete y esperar el ACK
     do {
-      // Send Packet
       uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_1K_SIZE + PACKET_OVERHEAD);
 
-      // Wait for Ack
       err = Ymodem_WaitResponse(ACK, 10);
       if (err == 1) {
         blkNumber++;
-        if (size > PACKET_1K_SIZE)
-          size -= PACKET_1K_SIZE; // Next packet
-        else
-          size = 0; // Last packet sent
+        offset += bytesToRead;   // Mover el offset al siguiente bloque
+        fileSize -= bytesToRead; // Reducir el tamaño restante
       }
       else if (err == 0 || err == 4) {
         send_CA();
-        return -4; // timeout or wrong response
+        return -3; // Timeout o respuesta incorrecta
       }
-      else if (err == 2)
-        return -5; // abort
+      else if (err == 2) {
+        return -4; // Abort
+      }
     } while (err != 1);
-    LED_toggle();
-  }
 
-  return 0;
+    LED_toggle(); // Indicar progreso con el LED
+  }
+  return 0; // Éxito
 }
 
 int sendEOT()

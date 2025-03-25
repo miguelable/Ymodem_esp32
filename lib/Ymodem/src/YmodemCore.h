@@ -69,8 +69,6 @@ public:
    * @brief Transmits a file using the Ymodem protocol.
    *
    * @param sendFileName The name of the file to be transmitted.
-   * @param sizeFile The size of the file to be transmitted.
-   * @param ffd A reference to the file object to be transmitted.
    * @return int Status code of the transmission (0 for success, non-zero for errors).
    * Error code:
    *         - -1: Abort by sender
@@ -83,7 +81,7 @@ public:
    *         - -8: Timeout
    *         - -9: File size exceeds maxsize
    */
-  int transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd);
+  int transmit(const char* sendFileName);
 
   /**
    * @brief Sets the pin number for the LED.

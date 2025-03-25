@@ -38,7 +38,7 @@ int waitForReceiverResponse();
  * @param sizeFile The size of the file to be sent, in bytes.
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendInitialPacket(char* sendFileName, unsigned int sizeFile);
+int sendInitialPacket(const char* sendFileName, unsigned int sizeFile);
 
 /**
  * @brief Sends file blocks over a communication channel.
@@ -46,10 +46,10 @@ int sendInitialPacket(char* sendFileName, unsigned int sizeFile);
  * This function is responsible for transmitting the contents of a file in blocks.
  *
  * @param sizeFile The size of the file to be sent, in bytes.
- * @param ffd A reference to the file object to be transmitted.
+ * @param fs The file system object representing the file to be sent.
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendFileBlocks(unsigned int sizeFile, fs::File& ffd);
+int sendFileBlocks(const char* fileName, FileSystem& fs);
 
 /**
  * @brief Sends the End Of Transmission (EOT) signal.

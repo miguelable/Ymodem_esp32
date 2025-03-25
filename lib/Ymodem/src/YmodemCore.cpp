@@ -66,9 +66,22 @@ int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
   return size;
 }
 
-int Ymodem::transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd)
+int Ymodem::transmit(const char* sendFileName)
 {
-  int err;
+  int        err;
+  FileSystem fs;
+
+  unsigned int sizeFile = fs.getFileSize(sendFileName);
+  if (sizeFile == 0) {
+    log_e("File not found: %s", sendFileName);
+    return -5; // Filename packet error
+  }
+
+  // Correct the file name if it starts with '/'
+  char* fileName = (char*)sendFileName;
+  if (fileName[0] == '/') {
+    fileName++;
+  }
 
   // Wait for response from receiver
   err = waitForReceiverResponse();
@@ -77,13 +90,13 @@ int Ymodem::transmit(char* sendFileName, unsigned int sizeFile, fs::File& ffd)
   }
 
   // Send initial packet
-  err = sendInitialPacket(sendFileName, sizeFile);
+  err = sendInitialPacket(fileName, sizeFile);
   if (err != 0) {
     return err;
   }
 
   // Send file blocks
-  err = sendFileBlocks(sizeFile, ffd);
+  err = sendFileBlocks(sendFileName, fs);
   if (err != 0) {
     return err;
   }

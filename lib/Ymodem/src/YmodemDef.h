@@ -20,7 +20,7 @@
 
 // === LED pin used to show transfer activity ===
 // === Set to 0 if you don't want to use it   ===
-#define YMODEM_LED_ACT 0    /*!< GPIO pin number for activity LED, set to 0 if you dont have LED*/
+#define YMODEM_LED_ACT 2    /*!< GPIO pin number for activity LED, set to 0 if you dont have LED*/
 #define YMODEM_LED_ACT_ON 1 /*!< LED ON state, 1 for active high, 0 for active low */
 
 // ==== Y-MODEM defines ====

@@ -21,8 +21,8 @@
 #include <string.h>
 
 #include "driver/gpio.h"
+#include "filesystem.h"
 #include "rom/crc.h"
-#include <FS.h>
 #include <driver/uart.h>
 
 #include "YmodemDef.h"
@@ -137,5 +137,7 @@ void send_CRC16();
  *                 while a negative value indicates an error.
  */
 int32_t Receive_Packet(uint8_t* data, int* length, uint32_t timeout);
+
+int readFirmware(uint8_t* buffer, size_t offset, size_t length);
 
 #endif // YMODEMUTILS_H
