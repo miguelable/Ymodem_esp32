@@ -90,6 +90,23 @@ public:
    */
   error_code_littefs writeToFile(const char* filename, const uint8_t* data, size_t size);
 
+
+  /**
+   * @brief Writes data to a file in the filesystem.
+   * 
+   * This function writes the specified data to a file with the given filename
+   * in the filesystem. If the file does not exist, it will be created. If the
+   * file already exists, its contents will be overwritten.
+   * 
+   * @param filename The name of the file to write to. This should include the
+   *                 full path if necessary.
+   * @param data A pointer to the data to be written to the file.
+   * @param size The size of the data to be written, in bytes.
+   * @return error_code_littefs Returns an error code indicating the success or
+   *                            failure of the operation.
+   */
+  error_code_littefs writeToFile(const char* filename, const char* data, size_t size);
+
   /**
    * @brief Reads data from a file in the LittleFS filesystem.
    *

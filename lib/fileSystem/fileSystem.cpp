@@ -50,6 +50,15 @@ error_code_littefs FileSystem::writeToFile(const char* filename, const uint8_t* 
   return LITTLEFS_OK;
 }
 
+error_code_littefs FileSystem::writeToFile(const char* filename, const char* data, size_t size)
+{
+  uint8_t* buffer = new uint8_t[size];
+  memcpy(buffer, data, size);
+  error_code_littefs err = writeToFile(filename, buffer, size);
+  delete[] buffer;
+  return err;
+}
+
 error_code_littefs FileSystem::readFromFile(const char* filename, uint8_t* data, size_t size, size_t offset)
 {
   File file = LittleFS.open(filename, FILE_READ);
