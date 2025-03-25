@@ -141,3 +141,15 @@ size_t FileSystem::getRemainingSpace()
 {
   return LittleFS.totalBytes() - LittleFS.usedBytes();
 }
+
+size_t FileSystem::getFileSize(const char* filename)
+{
+  File file = LittleFS.open(filename, FILE_READ);
+  if (!file) {
+    log_e("Failed to open file for reading");
+    return 0;
+  }
+  size_t size = file.size();
+  file.close();
+  return size;
+}

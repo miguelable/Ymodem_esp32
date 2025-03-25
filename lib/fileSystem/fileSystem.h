@@ -153,6 +153,18 @@ public:
    * @return size_t The amount of remaining space in bytes.
    */
   size_t getRemainingSpace();
+
+  /**
+   * @brief Retrieves the size of a file in bytes.
+   *
+   * This function opens the specified file in read mode, determines its size,
+   * and then closes the file. If the file cannot be opened, an error is logged
+   * and the function returns 0.
+   *
+   * @param filename The path to the file whose size is to be determined.
+   * @return The size of the file in bytes, or 0 if the file could not be opened.
+   */
+  size_t getFileSize(const char* filename);
 };
 
 #endif // FILESYSTEM_H
