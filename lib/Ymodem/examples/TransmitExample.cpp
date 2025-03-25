@@ -22,6 +22,10 @@
 
 Ymodem ymodem; /*!< Ymodem instance */
 
+#define RESET_PIN 4
+#define RX_PIN 16
+#define TX_PIN 17
+
 /**
  * @brief Initial system configuration.
  *
@@ -50,15 +54,34 @@ void setup()
   pinMode(YMODEM_LED_ACT, OUTPUT);
   digitalWrite(YMODEM_LED_ACT, YMODEM_LED_ACT_ON ^ 1);
 
+  // Configure the Reset pin as output
+  pinMode(RESET_PIN, OUTPUT);
+
   // configure serial communication for Ymodem transfer
-  Serial1.begin(115200, SERIAL_8N1, 16, 17); // RX, TX pins
-  if (!Serial1) {
+  if (!Serial) {
     Serial.println("Error initialazing Serial port");
     return;
   }
 
   // setup finish message
-  log_d("Setup completed, ready ro send data");
+  log_d("Setup completed, ready to send data");
+
+  // Reset the receiver
+  digitalWrite(RESET_PIN, LOW);
+  delay(100);
+  digitalWrite(RESET_PIN, HIGH);
+  delay(100);
+
+  // write 1 to the module to set it in download mode
+  Serial.println("1");
+  while (1) {
+    // read the response from the module
+    if (Serial.available() > 0) {
+      // print the response
+      // log_d("%s", Serial.readString().c_str());
+      Serial.print(Serial.readString());
+    }
+  }
 }
 
 /**
@@ -74,22 +97,22 @@ void setup()
  */
 void loop()
 {
-  // Open file saved in SPIFFS to transmit
-  File ffd = SPIFFS.open("/firmware-1.bin", FILE_READ);
-  if (!ffd) {
-    log_e("Error reading file form SPIFFS");
-    return;
-  }
+  // // Open file saved in SPIFFS to transmit
+  // File ffd = SPIFFS.open("/firmware-1.bin", FILE_READ);
+  // if (!ffd) {
+  //   log_e("Error reading file form SPIFFS");
+  //   return;
+  // }
 
-  // Transmit the file to the receiver
-  int result = ymodem.transmit((char*)"firmware-1.bin", ffd.size(), ffd);
-  ffd.close();
+  // // Transmit the file to the receiver
+  // int result = ymodem.transmit((char*)"LSM100A_SDK_V104_240129.bin", ffd.size(), ffd);
+  // ffd.close();
 
-  if (result == 0) {
-    log_i("Send successfully done");
-  }
-  else {
-    log_e("Error sending file. Error code %d\n", result);
-  }
-  delay(10);
+  // if (result == 0) {
+  //   log_i("Send successfully done");
+  // }
+  // else {
+  //   log_e("Error sending file. Error code %d\n", result);
+  // }
+  // delay(10);
 }
