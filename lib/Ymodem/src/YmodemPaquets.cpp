@@ -15,8 +15,6 @@
 
 void Ymodem_PrepareIntialPacket(uint8_t* data, const char* fileName, uint32_t length)
 {
-  uint16_t tempCRC;
-
   memset(data, 0, PACKET_SIZE + PACKET_HEADER);
   // Make first three packet
   data[0] = SOH;
@@ -32,51 +30,46 @@ void Ymodem_PrepareIntialPacket(uint8_t* data, const char* fileName, uint32_t le
        strlen((char*)(data + PACKET_HEADER + strlen((char*)(data + PACKET_HEADER)) + 1))] = ' ';
 
   // add crc
-  tempCRC                               = crc16(&data[PACKET_HEADER], PACKET_SIZE);
+  uint16_t tempCRC                      = crc16(&data[PACKET_HEADER], PACKET_SIZE);
   data[PACKET_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
 void Ymodem_PrepareLastPacket(uint8_t* data)
 {
-  uint16_t tempCRC;
-
   memset(data, 0, PACKET_SIZE + PACKET_HEADER);
+
   data[0] = SOH;
   data[1] = 0x00;
   data[2] = 0xff;
-  tempCRC = crc16(&data[PACKET_HEADER], PACKET_SIZE);
-  // tempCRC = crc16_le(0, &data[PACKET_HEADER], PACKET_SIZE);
+
+  uint16_t tempCRC = crc16(&data[PACKET_HEADER], PACKET_SIZE);
+
   data[PACKET_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
-void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, const uint8_t* buffer)
+void Ymodem_PreparePacket(uint8_t* data, uint8_t packetNum, uint32_t sizeBlock, const uint8_t* buffer)
 {
-  uint16_t i;
-  uint16_t tempCRC;
-
   data[0] = STX;
-  data[1] = (pktNo & 0x000000ff);
-  data[2] = (~(pktNo & 0x000000ff));
+  data[1] = (packetNum & 0x000000ff);
+  data[2] = (~(packetNum & 0x000000ff));
 
-  // Copiar los datos del buffer al paquete
-  memcpy(data + PACKET_HEADER, buffer, sizeBlk);
+  memcpy(data + PACKET_HEADER, buffer, sizeBlock);
 
   // Rellenar con ceros si el bloque es menor que PACKET_1K_SIZE
-  if (sizeBlk < PACKET_1K_SIZE) {
-    for (i = sizeBlk + PACKET_HEADER; i < PACKET_1K_SIZE + PACKET_HEADER; i++) {
-      data[i] = 0x00; // EOF (0x1A) o 0x00
+  if (sizeBlock < PACKET_1K_SIZE) {
+    for (uint16_t index = sizeBlock + PACKET_HEADER; index < PACKET_1K_SIZE + PACKET_HEADER; index++) {
+      data[index] = 0x00; // EOF (0x1A) o 0x00
     }
   }
 
-  // Calcular el CRC
-  tempCRC                                  = crc16(&data[PACKET_HEADER], PACKET_1K_SIZE);
+  uint16_t tempCRC                         = crc16(&data[PACKET_HEADER], PACKET_1K_SIZE);
   data[PACKET_1K_SIZE + PACKET_HEADER]     = tempCRC >> 8;
   data[PACKET_1K_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
-uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo)
+uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout)
 {
   unsigned char receivedC;
   uint32_t      errors = 0;
@@ -100,6 +93,6 @@ uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo)
     else {
       errors++;
     }
-  } while (errors < tmo);
+  } while (errors < timeout);
   return 0;
 }

@@ -41,11 +41,11 @@ void Ymodem_PrepareLastPacket(uint8_t* data);
  * @brief Prepares a Ymodem packet with the given data.
  *
  * @param data Pointer to the buffer where the packet will be prepared.
- * @param pktNo Packet number to be included in the packet.
+ * @param packetNum Packet number to be included in the packet.
  * @param sizeBlk Size of the block to be included in the packet.
  * @param buffer Pointer to the data buffer to be included in the packet.
  */
-void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, const uint8_t* buffer);
+void Ymodem_PreparePacket(uint8_t* data, uint8_t packetNum, uint32_t sizeBlk, const uint8_t* buffer);
 
 /**
  * @brief Waits for a specific response character within a given timeout period.
@@ -55,10 +55,10 @@ void Ymodem_PreparePacket(uint8_t* data, uint8_t pktNo, uint32_t sizeBlk, const 
  * the expected response is received before proceeding.
  *
  * @param ackchr The expected response character to wait for.
- * @param tmo The timeout period in milliseconds to wait for the response.
+ * @param timeout The timeout period in milliseconds to wait for the response.
  * @return uint8_t Returns 1 if the expected response character is received within the timeout period,
  *         otherwise returns 0.
  */
-uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t tmo);
+uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout);
 
 #endif // YMODEMPAQUETS_H
