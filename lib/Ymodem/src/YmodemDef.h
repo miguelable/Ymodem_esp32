@@ -17,6 +17,7 @@
 // === UART DEFINES ====
 #define EX_UART_NUM UART_NUM_0 /*!< UART port number */
 #define BUF_SIZE (1080)        /*!< UART buffer size */
+#define MAX_BUFFER_SIZE (1024) /*!< Maximum buffer size */
 
 // === LED pin used to show transfer activity ===
 // === Set to 0 if you don't want to use it   ===

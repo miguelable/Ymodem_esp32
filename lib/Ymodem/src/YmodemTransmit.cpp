@@ -19,7 +19,7 @@ int waitForReceiverResponse()
   int           err = 0;
 
   do {
-    Send_Byte(CRC16);
+    send_CRC16();
     LED_toggle();
   } while (Receive_Byte(&receivedC, NAK_TIMEOUT) < 0 && err++ < 45);
 
@@ -64,11 +64,11 @@ int sendInitialPacket(const char* sendFileName, unsigned int sizeFile)
 int sendFileBlocks(const char* fileName, FileSystem& fs)
 {
   uint8_t  packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  uint8_t  buffer[PACKET_1K_SIZE]; // Buffer para leer datos del archivo
+  uint8_t  buffer[PACKET_1K_SIZE];
   uint16_t blkNumber = 0x01;
   int      err;
   size_t   offset   = 0;
-  size_t   fileSize = fs.getFileSize(fileName); // Obtener el tamaño del archivo
+  size_t   fileSize = fs.getFileSize(fileName);
 
   while (fileSize > 0) {
     // Leer datos del archivo en bloques
@@ -111,12 +111,12 @@ int sendEOT()
 {
   int err;
 
-  Send_Byte(EOT); // Send (EOT)
+  send_EOT();
   do {
     // Wait for Ack
     err = Ymodem_WaitResponse(ACK, 10);
-    if (err == 3) {   // NAK
-      Send_Byte(EOT); // Send (EOT)
+    if (err == 3) { // NAK
+      send_EOT();
     }
     else if (err == 0 || err == 4) {
       send_CA();
