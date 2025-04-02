@@ -104,7 +104,7 @@ void waitForModuleResponse(int timeoutMs)
     if (bytesRead > 0 && response[0] == 'C') {
       break; // Exit loop if 'C' is received
     }
-    uart_write_bytes(UART_NUM_0, response, bytesRead); // Send response to UART_NUM_0 for debugging
+    // uart_write_bytes(UART_NUM_0, response, bytesRead); // Send response to UART_NUM_0 for debugging
   }
 }
 
