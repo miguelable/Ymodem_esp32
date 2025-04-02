@@ -102,10 +102,12 @@ void waitForModuleResponse(int timeoutMs)
     char response[2] = {0};
     int  bytesRead   = uart_read_bytes(EX_UART_NUM, (uint8_t*)response, sizeof(response) - 1, 100 / portTICK_RATE_MS);
     if (bytesRead > 0 && response[0] == 'C') {
-      break; // Exit loop if 'C' is received
+      log_i("Module ready for Ymodem transfer");
+      return; // Exit loop if 'C' is received
     }
     // uart_write_bytes(UART_NUM_0, response, bytesRead); // Send response to UART_NUM_0 for debugging
   }
+  log_e("Module not responding after reset");
 }
 
 void Ymodem::resetExternalModule(int resetPin)
