@@ -58,6 +58,24 @@ public:
   ~Ymodem(){};
 
   /**
+   * @brief Configures the Ymodem communication settings, including UART parameters and pin assignments.
+   *
+   * @param rxPin The GPIO pin number to be used for UART RX (receive).
+   * @param txPin The GPIO pin number to be used for UART TX (transmit).
+   *
+   * This function initializes the UART with the specified configuration:
+   * - Baud rate: 115200
+   * - Data bits: 8
+   * - Parity: Disabled
+   * - Stop bits: 1
+   * - Flow control: Disabled
+   * - Source clock: APB
+   *
+   * It also installs the UART driver and sets the RX and TX pins for Ymodem communication.
+   */
+  void Ymodem_Config(int rxPin = YMODEM_RX_PIN, int txPin = YMODEM_TX_PIN);
+
+  /**
    * @brief Receives data and writes it to the provided file.
    *
    * @param ffd Reference to the file where the received data will be written.
