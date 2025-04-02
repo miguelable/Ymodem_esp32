@@ -62,8 +62,11 @@ int Ymodem::getLedPin()
   return ledPin;
 }
 
-/**
- * @brief Finalizes the Ymodem session.
+void Ymodem::setYmodemPins(int rxPin, int txPin)
+{
+  uart_set_pin(EX_UART_NUM, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  uart_set_baudrate(EX_UART_NUM, 115200);
+}
  *
  * This function is called to perform any necessary cleanup or finalization
  * tasks at the end of a Ymodem session. If YMODEM_LED_ACT is defined, it will

@@ -129,6 +129,16 @@ public:
    */
   int getLedPin();
 
+  /**
+   * @brief Configures the UART pins and sets the baud rate for Ymodem communication.
+   *
+   * This function sets the RX and TX pins for the UART interface used by the Ymodem protocol.
+   * It also configures the baud rate to 115200 for communication.
+   *
+   * @param rxPin The GPIO pin number to be used as the UART RX pin.
+   * @param txPin The GPIO pin number to be used as the UART TX pin.
+   */
+  void setYmodemPins(int rxPin, int txPin);
 private:
   int  ledPin = YMODEM_LED_ACT; /**< Pin number associated with the LED. */
   void finalizeSession();
