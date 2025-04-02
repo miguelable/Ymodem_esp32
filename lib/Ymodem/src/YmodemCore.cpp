@@ -129,10 +129,10 @@ void Ymodem::resetExternalModule(int resetPin)
  *
  * @note The LED state is toggled by XORing the current state with 1.
  */
-void Ymodem::finalizeSession()
+void Ymodem::endYmodemSession()
 {
 #if YMODEM_LED_ACT
-  digitalWrite(ledPin, YMODEM_LED_ACT_ON ^ 1);
+  gpio_set_level((gpio_num_t)YMODEM_LED_PIN, YMODEM_LED_ACT_ON ^ 1)
 #endif
 }
 
@@ -150,7 +150,7 @@ int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
     size = result; // Tamaño del archivo recibido
   }
 
-  finalizeSession();
+  endYmodemSession();
   return size;
 }
 
@@ -161,7 +161,6 @@ int Ymodem::transmit(const char* sendFileName)
 
   unsigned int sizeFile = fs.getFileSize(sendFileName);
   if (sizeFile == 0) {
-    log_e("File not found: %s", sendFileName);
     return -5; // Filename packet error
   }
 

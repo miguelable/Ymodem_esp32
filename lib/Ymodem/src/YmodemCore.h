@@ -158,7 +158,7 @@ public:
 
 private:
   int  ledPin = YMODEM_LED_ACT; /**< Pin number associated with the LED. */
-  void finalizeSession();
+  void endYmodemSession();
 };
 
 #endif // YMODEMCORE_H
