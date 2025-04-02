@@ -120,7 +120,7 @@ public:
    *
    * @param pin The pin number to be set for the LED.
    */
-  void setLedPin(int pin);
+  void setLedPin(int pin = YMODEM_LED_PIN);
 
   /**
    * @brief Retrieves the pin number associated with the LED.

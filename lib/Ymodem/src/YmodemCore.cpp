@@ -43,10 +43,18 @@ void Ymodem::Ymodem_Config(int rxPin, int txPin)
 
 void Ymodem::setLedPin(int pin)
 {
-  ledPin = pin;
-  // Set the LED pin as an output
-  pinMode(ledPin, OUTPUT);
-  log_i("LED pin set to %d", ledPin);
+  ledPin             = pin;
+  gpio_config_t conf = {
+    .pin_bit_mask = (1ULL << ledPin),      /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+    .mode         = GPIO_MODE_OUTPUT,      /*!< GPIO mode */
+    .pull_up_en   = GPIO_PULLUP_DISABLE,   /*!< Disable pull-up resistors */
+    .pull_down_en = GPIO_PULLDOWN_DISABLE, /*!< Disable pull-down resistors */
+    .intr_type    = GPIO_INTR_DISABLE      /*!< Disable interrupts */
+  };
+  gpio_config(&conf);
+
+  std::string doneMsg = std::string("LED pin set to ") + std::to_string(ledPin) + "\n";
+  uart_write_bytes(UART_NUM_0, doneMsg.c_str(), doneMsg.length());
 }
 
 int Ymodem::getLedPin()
