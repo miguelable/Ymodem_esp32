@@ -37,6 +37,18 @@ public:
   Ymodem();
 
   /**
+   * @brief Constructor for the Ymodem class.
+   *
+   * This constructor initializes the Ymodem object by setting up the specified
+   * RX and TX pins for communication and configuring the LED pin as an output.
+   * It also calls the Ymodem_Config function to complete the initialization.
+   *
+   * @param rxPin The GPIO pin number used for receiving data.
+   * @param txPin The GPIO pin number used for transmitting data.
+   */
+  Ymodem(int rxPin, int txPin);
+
+  /**
    * @brief Destructor for the Ymodem class.
    *
    * This destructor is responsible for cleaning up any resources
