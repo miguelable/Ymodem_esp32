@@ -139,6 +139,23 @@ public:
    * @param txPin The GPIO pin number to be used as the UART TX pin.
    */
   void setYmodemPins(int rxPin, int txPin);
+
+#ifdef YMODEM_LSM1X0A
+  /**
+   * @brief Resets an external module connected to the ESP32 using a specified GPIO pin.
+   *
+   * This function configures the specified GPIO pin as an output, disables pull-up/pull-down resistors,
+   * and toggles the pin to reset the external module. After resetting, it sends a reset command via UART
+   * and waits for a specific response ('C') from the module to confirm the reset process.
+   *
+   * @param resetPin The GPIO pin number used to reset the external module.
+   *
+   * @note The function assumes that the UART interface (EX_UART_NUM) is already initialized and configured.
+   *       It also sends any received response from the module to the default UART (UART_NUM_0) for debugging purposes.
+   */
+  void resetExternalModule(int resetPin = YMODEM_RESET_PIN);
+#endif
+
 private:
   int  ledPin = YMODEM_LED_ACT; /**< Pin number associated with the LED. */
   void finalizeSession();

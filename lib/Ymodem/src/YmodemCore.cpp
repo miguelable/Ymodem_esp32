@@ -67,6 +67,61 @@ void Ymodem::setYmodemPins(int rxPin, int txPin)
   uart_set_pin(EX_UART_NUM, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   uart_set_baudrate(EX_UART_NUM, 115200);
 }
+
+#ifdef YMODEM_LSM1X0A
+void configureGpioPin(int pin)
+{
+  gpio_config_t conf = {
+    .pin_bit_mask = (1ULL << pin),         /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+    .mode         = GPIO_MODE_OUTPUT,      /*!< GPIO mode */
+    .pull_up_en   = GPIO_PULLUP_DISABLE,   /*!< Disable pull-up resistors */
+    .pull_down_en = GPIO_PULLDOWN_DISABLE, /*!< Disable pull-down resistors */
+    .intr_type    = GPIO_INTR_DISABLE      /*!< Disable interrupts */
+  };
+  gpio_config(&conf);
+}
+
+void performResetCycle(int pin, int delayMs)
+{
+  gpio_set_level((gpio_num_t)pin, 0);
+  vTaskDelay(pdMS_TO_TICKS(delayMs));
+
+  gpio_set_level((gpio_num_t)pin, 1);
+  vTaskDelay(pdMS_TO_TICKS(delayMs));
+}
+
+void sendResetCommand()
+{
+  uart_write_bytes(EX_UART_NUM, "1", 1);
+}
+
+void waitForModuleResponse(int timeoutMs)
+{
+  unsigned long startTime = millis();
+  while (millis() - startTime < timeoutMs) {
+    char response[2] = {0};
+    int  bytesRead   = uart_read_bytes(EX_UART_NUM, (uint8_t*)response, sizeof(response) - 1, 100 / portTICK_RATE_MS);
+    if (bytesRead > 0 && response[0] == 'C') {
+      break; // Exit loop if 'C' is received
+    }
+    uart_write_bytes(UART_NUM_0, response, bytesRead); // Send response to UART_NUM_0 for debugging
+  }
+}
+
+void Ymodem::resetExternalModule(int resetPin)
+{
+  constexpr int timeoutMs    = 10000; // Timeout in milliseconds
+  constexpr int resetDelayMs = 10;    // Delay in milliseconds
+
+  configureGpioPin(resetPin);                // Configure the GPIO pin as output
+  performResetCycle(resetPin, resetDelayMs); // Perform reset cycle
+  sendResetCommand();                        // Send reset command to the module
+  waitForModuleResponse(timeoutMs);          // Wait for response from the module
+}
+#endif
+
+/**
+ * @brief End the Ymodem session.
  *
  * This function is called to perform any necessary cleanup or finalization
  * tasks at the end of a Ymodem session. If YMODEM_LED_ACT is defined, it will
