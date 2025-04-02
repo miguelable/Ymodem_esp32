@@ -15,14 +15,18 @@
 #ifndef __YMODEMDEFINES_H__
 #define __YMODEMDEFINES_H__
 // === UART DEFINES ====
-#define EX_UART_NUM UART_NUM_0 /*!< UART port number */
+#define EX_UART_NUM UART_NUM_1 /*!< UART port number */
 #define BUF_SIZE (1080)        /*!< UART buffer size */
 #define MAX_BUFFER_SIZE (1024) /*!< Maximum buffer size */
 
 // === LED pin used to show transfer activity ===
 // === Set to 0 if you don't want to use it   ===
-#define YMODEM_LED_ACT 2    /*!< GPIO pin number for activity LED, set to 0 if you dont have LED*/
+#define YMODEM_LED_ACT 0    /*!< GPIO pin number for activity LED, set to 0 if you dont have LED*/
 #define YMODEM_LED_ACT_ON 1 /*!< LED ON state, 1 for active high, 0 for active low */
+
+#define YMODEM_RX_PIN GPIO_NUM_14 /*!< RX pin number */
+#define YMODEM_TX_PIN GPIO_NUM_33 /*!< TX pin number */
+#define YMODEM_LED_PIN GPIO_NUM_2 /*!< LED pin number */
 
 // ==== Y-MODEM defines ====
 #define PACKET_SEQNO_INDEX (1)                           /*!< Packet sequence number index */
@@ -49,5 +53,10 @@
 #define MAX_ERRORS (100)   /*!< Maximum number of errors allowed */
 
 #define YM_MAX_FILESIZE (10 * 1024 * 1024) /*!< Maximum file size allowed */
+#define PROGRESS_BAR_WIDTH (50)            /*!< Progress bar width in characters */
+
+#ifdef YMODEM_LSM1X0A
+#define YMODEM_RESET_PIN GPIO_NUM_15 /*!< Reset LSM1X0A Modem pin number */
+#endif
 
 #endif // __YMODEMDEFINES_H__
