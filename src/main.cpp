@@ -1,33 +1,21 @@
-
 #include "YmodemCore.h"
-
-Ymodem ymodem;
 
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial) {
-    ;
-  }
-  ymodem.setLedPin(2);
 
-  FileSystem file;
-
-  // Save the file system object
-  const char* fileName = "/test.txt";
-  for (int i = 0; i < 100; i++) {
-    char data[50];
-    snprintf(data, sizeof(data), "Hello, World! %d\n", i);
-    file.writeToFile(fileName, data, strlen(data));
-  }
-  file.~FileSystem();
-
+  const char* fileName = "/LSM100A_SDK_V104_240129.bin";
   // Transmit the file using Ymodem
-  if (!ymodem.transmit(fileName)) {
-    log_i("File transmitted successfully");
+  Ymodem ymodem;
+
+  ymodem.resetExternalModule();
+
+  YmodemPacketStatus err = ymodem.transmit(fileName);
+  if (err == YMODEM_TRANSMIT_OK) {
+    log_i("Success transmitting file: %s", fileName);
   }
   else {
-    log_e("Error transmitting file");
+    log_e("Error (%d): %s", err, ymodem.errorMessage(err));
   }
 }
 

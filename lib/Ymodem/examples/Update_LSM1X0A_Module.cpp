@@ -22,19 +22,18 @@ void setup()
 {
   Serial.begin(115200);
 
-  // File to be transmitted, replace with your file path, e.g., "/path/to/file.bin"
   const char* fileName = "/LSM100A_SDK_V104_240129.bin";
-
+  // Transmit the file using Ymodem
   Ymodem ymodem;
 
   ymodem.resetExternalModule();
 
-  int err = ymodem.transmit(fileName);
-  if (!err) {
-    log_i("File transmitted successfully");
+  YmodemPacketStatus err = ymodem.transmit(fileName);
+  if (err == YMODEM_TRANSMIT_OK) {
+    log_i("Success transmitting file: %s", fileName);
   }
   else {
-    log_e("Error transmitting file (%d)", err);
+    log_e("Error (%d): %s", err, ymodem.errorMessage(err));
   }
 }
 
