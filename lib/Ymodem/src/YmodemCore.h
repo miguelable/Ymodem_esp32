@@ -99,19 +99,9 @@ public:
    * @brief Transmits a file using the Ymodem protocol.
    *
    * @param sendFileName The name of the file to be transmitted.
-   * @return int Status code of the transmission (0 for success, non-zero for errors).
-   * Error code:
-   *         - -1: Abort by sender
-   *         - -2: Too many errors
-   *         - -3: Packet sequence error
-   *         - -4: Invalid file size
-   *         - -5: Filename packet error
-   *         - -6: File write error
-   *         - -7: User abort
-   *         - -8: Timeout
-   *         - -9: File size exceeds maxsize
+   * @return YmodemPacketStatus Status code indicating the result of the transmission.
    */
-  int transmit(const char* sendFileName);
+  YmodemPacketStatus transmit(const char* sendFileName);
 
   /**
    * @brief Sets the pin number for the LED.
@@ -155,6 +145,13 @@ public:
    */
   void resetExternalModule(int resetPin = YMODEM_RESET_PIN);
 #endif
+
+  /**
+   * @brief Function to print the error message to the console
+   *
+   * @param YmodemPacketStatus The error code to be printed
+   */
+  const char* errorMessage(YmodemPacketStatus err);
 
 private:
   int  ledPin = YMODEM_LED_ACT; /**< Pin number associated with the LED. */

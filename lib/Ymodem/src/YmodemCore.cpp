@@ -156,14 +156,14 @@ int Ymodem::receive(fs::File& ffd, unsigned int maxsize, char* getname)
   return size;
 }
 
-int Ymodem::transmit(const char* sendFileName)
+YmodemPacketStatus Ymodem::transmit(const char* sendFileName)
 {
-  int        err;
-  FileSystem fs;
+  YmodemPacketStatus err;
+  FileSystem         fs;
 
   unsigned int sizeFile = fs.getFileSize(sendFileName);
   if (sizeFile == 0) {
-    return -5; // Filename packet error
+    return YMODEM_READ_ERROR; // Filename packet error
   }
 
   // Correct the file name if it starts with '/'
@@ -174,33 +174,105 @@ int Ymodem::transmit(const char* sendFileName)
 
   // Wait for response from receiver
   err = waitForReceiverResponse();
-  if (err != 0) {
+  if (err != YMODEM_TRANSMIT_START) {
     return err;
   }
 
   // Send initial packet
   err = sendInitialPacket(fileName, sizeFile);
-  if (err != 0) {
+  if (err != YMODEM_RECEIVED_OK) {
     return err;
   }
 
   // Send file blocks
   err = sendFileBlocks(sendFileName, fs);
-  if (err != 0) {
+  if (err != YMODEM_TRANSMIT_OK) {
     return err;
   }
 
   // Send EOT
   err = sendEOT();
-  if (err != 0) {
+  if (err != YMODEM_RECEIVED_OK) {
     return err;
   }
 
   // Send last packet
   err = sendLastPacket();
-  if (err != 0) {
+  if (err != YMODEM_RECEIVED_OK) {
     return err;
   }
 
-  return 0; // file transmitted successfully
+  return YMODEM_TRANSMIT_OK; // file transmitted successfully
+}
+
+const char* Ymodem::errorMessage(YmodemPacketStatus err)
+{
+  switch (err) {
+    case YMODEM_TRANSMIT_START:
+      return "Ymodem transmit start successfully";
+      break;
+    case YMODEM_READ_FILE_OK:
+      return "File read successfully";
+      break;
+    case YMODEM_TRANSMIT_OK:
+      return "File correctly transmitted";
+      break;
+    case YMODEM_RECEIVED_NAK:
+      return "Negative acknowledge received, waiting for ACK";
+      break;
+    case YMODEM_RECEIVED_CA:
+      return "Packet received with CA (Cancel) sender abort";
+      break;
+    case YMODEM_RECEIVED_CORRECT:
+      return "Packet corresponds to the expected sequence number";
+      break;
+    case YMODEM_RECEIVED_OK:
+      return "Packet received successfully";
+      break;
+    case YMODEM_INVALID_CA:
+      return "Error reading byte (invalid CA sequence)";
+      break;
+    case YMODEM_INVALID_HEADER:
+      return "Error reading header, expected one of the following: SOH, STX, EOT, CRC16";
+      break;
+    case YMODEM_TIMEOUT:
+      return "Error reading byte, timout waiting for response";
+      break;
+    case YMODEM_SECOND_TIMEOUT:
+      return "Error reading second confirmation byte, timeout waiting for response";
+      break;
+    case YMODEM_ABORTED_BY_SENDER:
+      return "Transmission aborted by sender";
+      break;
+    case YMODEM_ABORTED_BY_TRANSFER:
+      return "Transmission aborted by transfer";
+      break;
+    case YMODEM_SEQ_ERROR:
+      return "Error reading byte, sequence error";
+      break;
+    case YMODEM_CRC_ERROR:
+      return "Error reading byte, expected CRC16";
+      break;
+    case YMODEM_BUFFER_OVERFLOW:
+      return "Buffer overflow, received data exceeds buffer size";
+      break;
+    case YMODEM_ERROR_WRITING:
+      return "Error writing to file, check file system";
+      break;
+    case YMODEM_SIZE_OVERFLOW:
+      return "Packet size overflow, received data exceeds maximum size";
+      break;
+    case YMODEM_SIZE_NULL:
+      return "Packet size is null, no data received";
+      break;
+    case YMODEM_MAX_ERRORS:
+      return "Maximum errors reached, transmission aborted";
+      break;
+    case YMODEM_READ_ERROR:
+      return "Error reading file, check file system";
+      break;
+    default:
+      return "Unknown error";
+      break;
+  }
 }

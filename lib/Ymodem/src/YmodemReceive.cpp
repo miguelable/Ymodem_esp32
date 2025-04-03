@@ -14,7 +14,7 @@
  */
 #include "YmodemReceive.h"
 
-ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size)
+YmodemPacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size)
 {
   static unsigned int file_len = 0;
 
@@ -29,12 +29,12 @@ ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, f
     int written_bytes = ffd.write(packet_data + PACKET_HEADER, write_len);
     if (written_bytes != write_len) {
       send_CA();
-      return PACKET_ERROR_WRITING;
+      return YMODEM_ERROR_WRITING;
     }
     LED_toggle();
   }
   send_ACK();
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
 void handleEOFPacket(unsigned int* file_done, unsigned int* errors)
@@ -89,47 +89,47 @@ void extractFileInfo(uint8_t* packet_data, char* getname, int* size)
   }
 }
 
-ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors)
+YmodemPacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors)
 {
   if (packet_data[PACKET_HEADER] != 0) { // Paquete válido
     extractFileInfo(packet_data, getname, size);
     if (*size < 1 || *size > maxsize) {
       send_CA();
-      return (*size > maxsize) ? PACKET_SIZE_OVERFLOW : PACKET_SIZE_NULL;
+      return (*size > maxsize) ? YMODEM_SIZE_OVERFLOW : YMODEM_SIZE_NULL;
     }
     send_ACKCRC16();
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
   else { // Paquete de encabezado vacío
     (*errors)++;
     if (*errors > 5) {
       send_CA();
-      return PACKET_MAX_ERRORS;
+      return YMODEM_MAX_ERRORS;
     }
     send_NAK();
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
 }
 
-ReceivePacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname,
-                                  unsigned int packets_received, int* size, unsigned int* file_done, unsigned int* errors)
+YmodemPacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname,
+                                 unsigned int packets_received, int* size, unsigned int* file_done, unsigned int* errors)
 {
   if (packet_length == 0) { // Paquete EOF
     handleEOFPacket(file_done, errors);
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
   else if (packet_length == -1) { // Abortado por transmisor
     send_ACK();
-    return PACKET_ABORTED;
+    return YMODEM_ABORTED_BY_SENDER;
   }
   else if (packet_length == -2) { // Error de recepción
     (*errors)++;
     if (*errors > 5) {
       send_CA();
-      return PACKET_MAX_ERRORS;
+      return YMODEM_MAX_ERRORS;
     }
     send_NAK();
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
 
   // Paquete normal
@@ -151,23 +151,23 @@ int handleFileSession(fs::File& ffd, unsigned int maxsize, char* getname, unsign
     int     packet_length = 0;
     uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
 
-    ReceivePacketStatus result = ReceiveAndValidatePacket(packet_data, &packet_length, NAK_TIMEOUT);
-    if (result == PACKET_RECEIVED_OK) {
+    YmodemPacketStatus result = ReceiveAndValidatePacket(packet_data, &packet_length, NAK_TIMEOUT);
+    if (result == YMODEM_RECEIVED_OK) {
       int process_result = processPacket(packet_data, packet_length, ffd, maxsize, getname, packets_received, &size, &file_done, errors);
-      if (process_result != PACKET_RECEIVED_OK) {
+      if (process_result != YMODEM_RECEIVED_OK) {
         return process_result; // Error durante el procesamiento
       }
       packets_received++;
     }
-    else if (result == PACKET_ABORTED) {
+    else if (result == YMODEM_ABORTED_BY_SENDER) {
       send_CA();
-      return PACKET_ABORTED;
+      return YMODEM_ABORTED_BY_SENDER;
     }
     else { // Timeout o error
       (*errors)++;
       if (*errors > MAX_ERRORS) {
         send_CA();
-        return PACKET_MAX_ERRORS;
+        return YMODEM_MAX_ERRORS;
       }
       send_CRC16();
     }

@@ -56,9 +56,8 @@ void Ymodem_PreparePacket(uint8_t* data, uint8_t packetNum, uint32_t sizeBlk, co
  *
  * @param ackchr The expected response character to wait for.
  * @param timeout The timeout period in milliseconds to wait for the response.
- * @return uint8_t Returns 1 if the expected response character is received within the timeout period,
- *         otherwise returns 0.
+ * @return YmodemPacketStatus Returns a status code indicating the result of the wait operation.
  */
-uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout);
+YmodemPacketStatus Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout = WAIT_TIMEOUT);
 
 #endif // YMODEMPAQUETS_H

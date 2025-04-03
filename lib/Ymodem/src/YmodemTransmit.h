@@ -26,7 +26,7 @@
  * @return int Returns a status code indicating the result of waiting for the receiver's response.
  *             The specific values and their meanings should be defined in the implementation.
  */
-int waitForReceiverResponse();
+YmodemPacketStatus waitForReceiverResponse();
 
 /**
  * @brief Sends the initial packet for a file transfer using the Ymodem protocol.
@@ -38,7 +38,7 @@ int waitForReceiverResponse();
  * @param sizeFile The size of the file to be sent, in bytes.
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendInitialPacket(const char* sendFileName, unsigned int sizeFile);
+YmodemPacketStatus sendInitialPacket(const char* sendFileName, unsigned int sizeFile);
 
 /**
  * @brief Sends file blocks over a communication channel.
@@ -49,7 +49,7 @@ int sendInitialPacket(const char* sendFileName, unsigned int sizeFile);
  * @param fs The file system object representing the file to be sent.
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendFileBlocks(const char* fileName, FileSystem& fs);
+YmodemPacketStatus sendFileBlocks(const char* fileName, FileSystem& fs);
 
 /**
  * @brief Sends the End Of Transmission (EOT) signal.
@@ -60,7 +60,7 @@ int sendFileBlocks(const char* fileName, FileSystem& fs);
  *
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendEOT();
+YmodemPacketStatus sendEOT();
 
 /**
  * @brief Sends the last packet in the Ymodem transmission.
@@ -71,6 +71,6 @@ int sendEOT();
  *
  * @return int Returns 0 on success, or a negative error code on failure.
  */
-int sendLastPacket();
+YmodemPacketStatus sendLastPacket();
 
 #endif // YMODEMTRANSMIT_H

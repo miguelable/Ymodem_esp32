@@ -74,9 +74,9 @@ ByteOperationStatus Receive_Byte(unsigned char* c, uint32_t timeout)
   unsigned char ch;
   int           err = uart_read_bytes(EX_UART_NUM, &ch, 1, timeout / portTICK_RATE_MS);
   if (err <= 0)
-    return ByteOperationStatus::BYTE_ERROR;
+    return BYTE_ERROR;
   *c = ch;
-  return ByteOperationStatus::BYTE_OK;
+  return BYTE_OK;
 }
 
 void uart_consume()
@@ -90,8 +90,8 @@ ByteOperationStatus Send_Byte(char c)
 {
   int err = uart_write_bytes(EX_UART_NUM, &c, 1);
   if (err < 0)
-    return ByteOperationStatus::BYTE_ERROR;
-  return ByteOperationStatus::BYTE_OK;
+    return BYTE_ERROR;
+  return BYTE_OK;
 }
 
 void send_EOT()
@@ -145,13 +145,13 @@ void handleSTX(int* packet_size)
  *
  * @param length Pointer to an integer where the EOT packet identifier will be stored.
  *               This is set to the value of PACKET_EOT.
- * @return ReceivePacketStatus Returns PACKET_RECEIVED_OK to indicate successful handling of the EOT signal.
+ * @return YmodemPacketStatus Returns YMODEM_RECEIVED_OK to indicate successful handling of the EOT signal.
  */
-ReceivePacketStatus handleEOT(int* length)
+YmodemPacketStatus handleEOT(int* length)
 {
   *length = PACKET_EOT;
   send_ACK();
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
 /**
@@ -165,22 +165,22 @@ ReceivePacketStatus handleEOT(int* length)
  * @param ch Pointer to a variable where the received byte will be stored.
  * @param timeout The maximum time (in milliseconds) to wait for a byte to be received.
  * @param length Pointer to an integer where the length of the packet will be stored.
- * @return ReceivePacketStatus
- *         - PACKET_TIMEOUT: If no byte is received within the timeout period.
- *         - PACKET_RECEIVED_OK: If the received byte matches the CA character and ACK is sent.
- *         - PACKET_INVALID_HEADER: If the received byte does not match the CA character.
+ * @return YmodemPacketStatus
+ *         - YMODEM_TIMEOUT: If no byte is received within the timeout period.
+ *         - YMODEM_RECEIVED_OK: If the received byte matches the CA character and ACK is sent.
+ *         - YMODEM_INVALID_HEADER: If the received byte does not match the CA character.
  */
-ReceivePacketStatus handleCA(unsigned char* ch, uint32_t timeout, int* length)
+YmodemPacketStatus handleCA(unsigned char* ch, uint32_t timeout, int* length)
 {
   if (Receive_Byte(ch, timeout) < 0) {
-    return PACKET_TIMEOUT;
+    return YMODEM_TIMEOUT;
   }
   if (*ch == CA) {
     *length = PACKET_ABORT;
     send_ACK();
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
-  return PACKET_INVALID_HEADER;
+  return YMODEM_INVALID_HEADER;
 }
 
 /**
@@ -190,11 +190,11 @@ ReceivePacketStatus handleCA(unsigned char* ch, uint32_t timeout, int* length)
  * that the file transfer process should be terminated. It returns a
  * status indicating that the packet transfer has been aborted.
  *
- * @return PACKET_ABORTED Status indicating the transfer was aborted.
+ * @return YMODEM_ABORTED_BY_SENDER Status indicating the transfer was aborted.
  */
-ReceivePacketStatus handleAbort()
+YmodemPacketStatus handleAbort()
 {
-  return PACKET_ABORTED;
+  return YMODEM_ABORTED_BY_SENDER;
 }
 
 /**
@@ -203,13 +203,13 @@ ReceivePacketStatus handleAbort()
  * This function introduces a delay, consumes any remaining data in the UART buffer,
  * and returns a status indicating that the packet header is invalid.
  *
- * @return PACKET_INVALID_HEADER to indicate an invalid packet header.
+ * @return YMODEM_INVALID_HEADER to indicate an invalid packet header.
  */
-ReceivePacketStatus handleInvalidHeader()
+YmodemPacketStatus handleInvalidHeader()
 {
   vTaskDelay(100 / portTICK_RATE_MS);
   uart_consume();
-  return PACKET_INVALID_HEADER;
+  return YMODEM_INVALID_HEADER;
 }
 
 /**
@@ -221,15 +221,15 @@ ReceivePacketStatus handleInvalidHeader()
  *
  * @param[out] ch Pointer to a variable where the received byte will be stored.
  * @param[in] timeout The maximum time (in milliseconds) to wait for the byte.
- * @return PACKET_RECEIVED_OK if the byte was successfully received,
- *         PACKET_TIMEOUT if the operation timed out.
+ * @return YMODEM_RECEIVED_OK if the byte was successfully received,
+ *         YMODEM_TIMEOUT if the operation timed out.
  */
-ReceivePacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
+YmodemPacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
 {
   if (Receive_Byte(ch, timeout) < 0) {
-    return PACKET_TIMEOUT;
+    return YMODEM_TIMEOUT;
   }
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
 /**
@@ -240,7 +240,7 @@ ReceivePacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
  * @param length Pointer to an integer where the length of the packet will be stored if applicable.
  * @param timeout The timeout value for operations that require waiting.
  * @param data Pointer to a byte where the processed header byte will be stored.
- * @return ReceivePacketStatus The status of the packet processing, indicating success or the type of error.
+ * @return YmodemPacketStatus The status of the packet processing, indicating success or the type of error.
  *
  * This function processes the header byte of a packet and determines the appropriate action
  * based on its value. It supports the following header types:
@@ -251,7 +251,7 @@ ReceivePacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
  * - ABORT1/ABORT2: Aborts the operation.
  * - Default: Handles invalid or unrecognized headers.
  */
-ReceivePacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* length, uint32_t timeout, uint8_t* data)
+YmodemPacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* length, uint32_t timeout, uint8_t* data)
 {
   switch (ch) {
     case SOH:
@@ -272,7 +272,7 @@ ReceivePacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* 
   }
 
   *data = (uint8_t)ch;
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
 /**
@@ -289,26 +289,26 @@ ReceivePacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* 
  * @param packet_size The size of the packet to be read (excluding overhead).
  * @param timeout The timeout duration (in milliseconds) for receiving each byte.
  *
- * @return PACKET_RECEIVED_OK if the packet is successfully read.
- *         PACKET_TIMEOUT if a timeout occurs while receiving a byte.
- *         PACKET_BUFFER_OVERFLOW if the buffer size is exceeded.
+ * @return YMODEM_RECEIVED_OK if the packet is successfully read.
+ *         YMODEM_TIMEOUT if a timeout occurs while receiving a byte.
+ *         YMODEM_BUFFER_OVERFLOW if the buffer size is exceeded.
  */
-ReceivePacketStatus ReadPacketData(uint8_t* data, int packet_size, uint32_t timeout)
+YmodemPacketStatus ReadPacketData(uint8_t* data, int packet_size, uint32_t timeout)
 {
   uint8_t*      dptr = data + 1;
   unsigned char ch;
 
   for (int i = 0; i < (packet_size + PACKET_OVERHEAD - 1); i++) {
     if (Receive_Byte(&ch, timeout) < 0) {
-      return PACKET_TIMEOUT;
+      return YMODEM_TIMEOUT;
     }
     if (dptr - data >= MAX_BUFFER_SIZE) {
-      return PACKET_BUFFER_OVERFLOW;
+      return YMODEM_BUFFER_OVERFLOW;
     }
     *dptr++ = (uint8_t)ch;
   }
 
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
 /**
@@ -317,31 +317,31 @@ ReceivePacketStatus ReadPacketData(uint8_t* data, int packet_size, uint32_t time
  * @param data Pointer to the packet data buffer.
  * @param packet_size Size of the packet data (excluding header and trailer).
  * @param length Pointer to an integer where the function will store the result:
- *               - If the sequence number is invalid, it will store PACKET_SEQ_ERROR.
- *               - If the CRC check fails, it will store PACKET_CRC_ERROR.
+ *               - If the sequence number is invalid, it will store YMODEM_SEQ_ERROR.
+ *               - If the CRC check fails, it will store YMODEM_CRC_ERROR.
  *               - Otherwise, it will store the packet size.
- * @return PACKET_RECEIVED_OK if the packet is valid or if an error is detected.
+ * @return YMODEM_RECEIVED_OK if the packet is valid or if an error is detected.
  *
- * @note The function always returns PACKET_RECEIVED_OK, but the actual status is indicated
+ * @note The function always returns YMODEM_RECEIVED_OK, but the actual status is indicated
  *         through the `length` parameter.
  */
-ReceivePacketStatus ValidatePacket(uint8_t* data, int packet_size, int* length)
+YmodemPacketStatus ValidatePacket(uint8_t* data, int packet_size, int* length)
 {
   if (data[PACKET_SEQNO_INDEX] != ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff)) {
     *length = PACKET_SEQ_INVALID;
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
 
   if (crc16(&data[PACKET_HEADER], packet_size + PACKET_TRAILER) != 0) {
     *length = PACKET_CRC_INVALID;
-    return PACKET_RECEIVED_OK;
+    return YMODEM_RECEIVED_OK;
   }
 
   *length = packet_size;
-  return PACKET_RECEIVED_OK;
+  return YMODEM_RECEIVED_OK;
 }
 
-ReceivePacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_t timeout)
+YmodemPacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_t timeout)
 {
   int           packet_size;
   unsigned char ch;
@@ -349,20 +349,20 @@ ReceivePacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_
   *length = PACKET_EOT;
 
   // Receive the initial byte
-  ReceivePacketStatus status = ReceiveInitialByte(&ch, timeout);
-  if (status != PACKET_RECEIVED_OK) {
+  YmodemPacketStatus status = ReceiveInitialByte(&ch, timeout);
+  if (status != YMODEM_RECEIVED_OK) {
     return status;
   }
 
   // Handle the packet header (SOH, STX, EOT, CA, ABORT)
   status = HandlePacketHeader(ch, &packet_size, length, timeout, data);
-  if (status != PACKET_RECEIVED_OK) {
+  if (status != YMODEM_RECEIVED_OK) {
     return status;
   }
 
   // Read the packet data
   status = ReadPacketData(data, packet_size, timeout);
-  if (status != PACKET_RECEIVED_OK) {
+  if (status != YMODEM_RECEIVED_OK) {
     return status;
   }
 

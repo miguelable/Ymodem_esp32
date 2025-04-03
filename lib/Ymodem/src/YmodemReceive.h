@@ -28,11 +28,11 @@
  * @param ffd Reference to the file object where the data will be written.
  * @param file_size Total size of the file being received.
  * @param errors Pointer to an unsigned int where the error count will be updated.
- * @return ReceivePacketStatus Status of the packet processing.
- *         - PACKET_RECEIVED_OK: Packet processed successfully.
- *         - PACKET_ERROR_WRITING: Error writing to the file in the filesystem.
+ * @return YmodemPacketStatus Status of the packet processing.
+ *         - YMODEM_RECEIVED_OK: Packet processed successfully.
+ *         - YMODEM_ERROR_WRITING: Error writing to the file in the filesystem.
  */
-ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size);
+YmodemPacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size);
 
 /**
  * @brief Handles the End Of File (EOF) packet in the Ymodem protocol.
@@ -69,14 +69,13 @@ void extractFileInfo(uint8_t* packet_data, char* getname, int* size);
  * @param getname Pointer to a buffer where the file name will be stored.
  * @param size Pointer to an integer where the file size will be stored.
  * @param errors Pointer to an unsigned integer where the error count will be stored.
- * @return ReceivePacketStatus Status of the packet processing.
- *         - PACKET_RECEIVED_OK: Packet processed successfully.
- *         - PACKET_SIZE_OVERFLOW: File size exceeds the maximum allowed size.
- *         - PACKET_SIZE_NULL: File size is null or invalid.
- *         - PACKET_MAX_ERRORS: Maximum number of errors reached.
+ * @return YmodemPacketStatus Status of the packet processing.
+ *         - YMODEM_RECEIVED_OK: Packet processed successfully.
+ *         - YMODEM_SIZE_OVERFLOW: File size exceeds the maximum allowed size.
+ *         - YMODEM_SIZE_NULL: File size is null or invalid.
+ *         - YMODEM_MAX_ERRORS: Maximum number of errors reached.
  */
-ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size,
-                                        unsigned int* errors);
+YmodemPacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors);
 
 /**
  * @brief Processes a received Ymodem packet.
@@ -97,8 +96,8 @@ ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length,
  * @return An integer indicating the status of the packet processing.
  *         0 indicates success, while non-zero values indicate different error conditions.
  */
-ReceivePacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname,
-                                  unsigned int packets_received, int* size, unsigned int* file_done, unsigned int* errors);
+YmodemPacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname,
+                                 unsigned int packets_received, int* size, unsigned int* file_done, unsigned int* errors);
 
 /**
  * @brief Handles a file session for receiving data.

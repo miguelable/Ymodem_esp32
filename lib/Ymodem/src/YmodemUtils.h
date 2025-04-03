@@ -41,29 +41,32 @@ enum PacketLengthStatus : int8_t
   PACKET_CRC_INVALID = -3  // Packet CRC error (invalid checksum)
 };
 
-enum ReceivePacketStatus : int8_t
+enum YmodemPacketStatus : int8_t
 {
-  PACKET_RECEIVED_OK     = 0,   // Packet received successfully
-  PACKET_INVALID_CA      = -1,  // Error reading byte (invalid CA sequence)
-  PACKET_INVALID_HEADER  = -2,  // Error reading byte (invalid header)
-  PACKET_TIMEOUT         = -3,  // Error reading byte (timeout)
-  PACKET_SECOND_TIMEOUT  = -4,  // Error reading second confirmation byte (timeout)
-  PACKET_ABORTED         = -5,  // Transmission aborted by sender
-  PACKET_SEQ_ERROR       = -6,  // Error in the packet sequence number
-  PACKET_CRC_ERROR       = -7,  // Error in the packet CRC
-  PACKET_BUFFER_OVERFLOW = -8,  // Buffer overflow
-  PACKET_ERROR_WRITING   = -9,  // Error writing to file
-  PACKET_SIZE_OVERFLOW   = -10, // Packet size overflow
-  PACKET_SIZE_NULL       = -11, // Packet size is null
-  PACKET_MAX_ERRORS      = -12, // Maximum errors reached
-};
+  YMODEM_TRANSMIT_START = 6, // Transmission started
+  YMODEM_READ_FILE_OK   = 5, // File read successfully
+  YMODEM_TRANSMIT_OK    = 4, // Packet transmitted successfully
 
-enum TransmitPacketStatus : int8_t
-{
-  PACKET_TRANSMIT_OK      = 0,  // Packet transmitted successfully
-  PACKET_TRANSMIT_ERROR   = -1, // Error during packet transmission
-  PACKET_TRANSMIT_TIMEOUT = -2, // Timeout during packet transmission
-  PACKET_TRANSMIT_ABORTED = -3  // Transmission aborted
+  YMODEM_RECEIVED_NAK     = 3, // NAK received (negative acknowledgment)
+  YMODEM_RECEIVED_CA      = 2, // Packet received with CA (Cancel) sender abort
+  YMODEM_RECEIVED_CORRECT = 1, // Packet corresponds to the expected sequence number
+  YMODEM_RECEIVED_OK      = 0, // Packet received successfully
+
+  YMODEM_INVALID_CA          = -1,  // Error reading byte (invalid CA sequence)
+  YMODEM_INVALID_HEADER      = -2,  // Error reading byte (invalid header)
+  YMODEM_TIMEOUT             = -3,  // Error reading byte (timeout)
+  YMODEM_SECOND_TIMEOUT      = -4,  // Error reading second confirmation byte (timeout)
+  YMODEM_ABORTED_BY_SENDER   = -5,  // Transmission aborted by sender
+  YMODEM_ABORTED_BY_TRANSFER = -6,  // Transmission aborted by transfer
+  YMODEM_SEQ_ERROR           = -7,  // Error in the packet sequence number
+  YMODEM_CRC_ERROR           = -8,  // Error in the packet CRC
+  YMODEM_BUFFER_OVERFLOW     = -9,  // Buffer overflow
+  YMODEM_ERROR_WRITING       = -10, // Error writing to file
+  YMODEM_SIZE_OVERFLOW       = -11, // Packet size overflow
+  YMODEM_SIZE_NULL           = -12, // Packet size is null
+  YMODEM_MAX_ERRORS          = -13, // Maximum errors reached
+  YMODEM_READ_ERROR          = -14, // Error reading file
+
 };
 
 /**
@@ -166,6 +169,6 @@ void send_CRC16();
  * @return int32_t Returns the status of the packet reception. A non-negative value indicates success,
  *                 while a negative value indicates an error.
  */
-ReceivePacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_t timeout);
+YmodemPacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_t timeout);
 
 #endif // YMODEMUTILS_H

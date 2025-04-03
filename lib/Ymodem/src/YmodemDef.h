@@ -50,6 +50,7 @@
 #define ABORT2 (0x61) /*!< 'a' == 0x61, abort by receiver */
 
 #define NAK_TIMEOUT (1000) /*!< Timeout for NAK response */
+#define WAIT_TIMEOUT (10)  /*!< Timeout for response waiting */
 #define MAX_ERRORS (100)   /*!< Maximum number of errors allowed */
 
 #define YM_MAX_FILESIZE (10 * 1024 * 1024) /*!< Maximum file size allowed */

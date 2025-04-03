@@ -69,30 +69,30 @@ void Ymodem_PreparePacket(uint8_t* data, uint8_t packetNum, uint32_t sizeBlock, 
   data[PACKET_1K_SIZE + PACKET_HEADER + 1] = tempCRC & 0xFF;
 }
 
-uint8_t Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout)
+YmodemPacketStatus Ymodem_WaitResponse(uint8_t ackchr, uint8_t timeout)
 {
   unsigned char receivedC;
   uint32_t      errors = 0;
 
   do {
-    if (Receive_Byte(&receivedC, NAK_TIMEOUT) == 0) {
+    if (Receive_Byte(&receivedC, NAK_TIMEOUT) == BYTE_OK) {
       if (receivedC == ackchr) {
-        return 1;
+        return YMODEM_RECEIVED_CORRECT;
       }
       else if (receivedC == CA) {
         send_CA();
-        return 2; // CA received, Sender abort
+        return YMODEM_ABORTED_BY_SENDER;
       }
       else if (receivedC == NAK) {
-        return 3;
+        return YMODEM_RECEIVED_NAK;
       }
       else {
-        return 4;
+        return YMODEM_INVALID_HEADER;
       }
     }
     else {
       errors++;
     }
   } while (errors < timeout);
-  return 0;
+  return YMODEM_TIMEOUT;
 }

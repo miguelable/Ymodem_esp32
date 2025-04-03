@@ -13,7 +13,7 @@
  */
 #include "YmodemTransmit.h"
 
-int waitForReceiverResponse()
+YmodemPacketStatus waitForReceiverResponse()
 {
   unsigned char receivedC;
   int           err = 0;
@@ -21,20 +21,24 @@ int waitForReceiverResponse()
   do {
     send_CRC16();
     LED_toggle();
-  } while (Receive_Byte(&receivedC, NAK_TIMEOUT) < 0 && err++ < 45);
+  } while (Receive_Byte(&receivedC, NAK_TIMEOUT) != BYTE_OK && err++ < MAX_ERRORS);
 
-  if (err >= 45 || receivedC != CRC16) {
+  if (err >= MAX_ERRORS) {
     send_CA();
-    return -1;
+    return YMODEM_TIMEOUT;
+  }
+  else if (receivedC != CRC16) {
+    send_CA();
+    return YMODEM_CRC_ERROR;
   }
 
-  return 0;
+  return YMODEM_TRANSMIT_START;
 }
 
-int sendInitialPacket(const char* sendFileName, unsigned int sizeFile)
+YmodemPacketStatus sendInitialPacket(const char* sendFileName, unsigned int sizeFile)
 {
-  uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  int     err;
+  uint8_t            packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
+  YmodemPacketStatus err;
 
   Ymodem_PrepareIntialPacket(packet_data, sendFileName, sizeFile);
   do {
@@ -42,26 +46,27 @@ int sendInitialPacket(const char* sendFileName, unsigned int sizeFile)
     uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
 
     // Wait for Ack
-    err = Ymodem_WaitResponse(ACK, 10);
-    if (err == 0 || err == 4) {
+    err = Ymodem_WaitResponse(ACK);
+    if (err == YMODEM_TIMEOUT || err == YMODEM_INVALID_HEADER) {
       send_CA();
-      return -2; // timeout or wrong response
+      return err;
     }
-    else if (err == 2)
-      return 98; // abort
+    else if (err == YMODEM_ABORTED_BY_SENDER)
+      return err; // abort
     LED_toggle();
-  } while (err != 1);
+  } while (err != YMODEM_RECEIVED_CORRECT);
 
   // After initial block the receiver sends 'C' after ACK
-  if (Ymodem_WaitResponse(CRC16, 10) != 1) {
+  err = Ymodem_WaitResponse(CRC16);
+  if (err != YMODEM_RECEIVED_CORRECT) {
     send_CA();
-    return -3;
+    return err;
   }
 
-  return 0;
+  return YMODEM_RECEIVED_OK; // Success
 }
 
-int readFileBlock(const char* fileName, FileSystem& fs, uint8_t* buffer, size_t& fileSize, size_t offset)
+YmodemPacketStatus readFileBlock(const char* fileName, FileSystem& fs, uint8_t* buffer, size_t& fileSize, size_t offset)
 {
   size_t bytesToRead = std::min(fileSize, static_cast<size_t>(PACKET_1K_SIZE));
   int    err         = fs.readFromFile(fileName, buffer, bytesToRead, offset);
@@ -69,9 +74,9 @@ int readFileBlock(const char* fileName, FileSystem& fs, uint8_t* buffer, size_t&
     const char* errorMsg = "Failed to read file\n";
     uart_write_bytes(UART_NUM_0, errorMsg, strlen(errorMsg));
     send_CA();
-    return -2; // Error al leer el archivo
+    return YMODEM_READ_ERROR; // Error al leer el archivo
   }
-  return 0;
+  return YMODEM_READ_FILE_OK;
 }
 
 void displayProgress(size_t offset, size_t totalSize, unsigned long startTime)
@@ -88,7 +93,7 @@ void displayProgress(size_t offset, size_t totalSize, unsigned long startTime)
     remainingTime      = (estimatedTotalTime > elapsedTime) ? (estimatedTotalTime - elapsedTime) / 1000 : 0;
   }
 
-  char progressBar[512];
+  char progressBar[124];
   snprintf(progressBar, sizeof(progressBar), "Progress: [");
   uart_write_bytes(UART_NUM_0, progressBar, strlen(progressBar));
 
@@ -102,35 +107,35 @@ void displayProgress(size_t offset, size_t totalSize, unsigned long startTime)
   uart_write_bytes(UART_NUM_0, progressBar, strlen(progressBar));
 }
 
-int sendPacketAndHandleResponse(uint8_t* packet_data, uint16_t& blkNumber, size_t& fileSize, size_t& offset, size_t totalSize,
-                                unsigned long startTime)
+YmodemPacketStatus sendPacketAndHandleResponse(uint8_t* packet_data, uint16_t& blkNumber, size_t& fileSize, size_t& offset, size_t totalSize,
+                                               unsigned long startTime)
 {
-  int    err;
-  size_t bytesToRead = std::min(fileSize, static_cast<size_t>(PACKET_1K_SIZE));
+  YmodemPacketStatus err;
+  size_t             bytesToRead = std::min(fileSize, static_cast<size_t>(PACKET_1K_SIZE));
 
   do {
     uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_1K_SIZE + PACKET_OVERHEAD);
-    err = Ymodem_WaitResponse(ACK, 10);
+    err = Ymodem_WaitResponse(ACK);
 
-    if (err == 1) {
+    if (err == YMODEM_RECEIVED_CORRECT) {
       offset += bytesToRead;   // Mover el offset al siguiente bloque
       fileSize -= bytesToRead; // Reducir el tamaño restante
       displayProgress(offset, totalSize, startTime);
     }
-    else if (err == 0 || err == 4) {
+    else if (err == YMODEM_TIMEOUT || err == YMODEM_INVALID_HEADER) {
       send_CA();
-      return -3; // Timeout o respuesta incorrecta
+      return err; // Timeout o respuesta incorrecta
     }
-    else if (err == 2) {
-      return -4; // Abort
+    else if (err == YMODEM_ABORTED_BY_SENDER) {
+      return err; // Abort
     }
-  } while (err != 1);
+  } while (err != YMODEM_RECEIVED_CORRECT);
 
   LED_toggle(); // Indicar progreso con el LED
-  return 0;
+  return YMODEM_RECEIVED_OK;
 }
 
-int sendFileBlocks(const char* fileName, FileSystem& fs)
+YmodemPacketStatus sendFileBlocks(const char* fileName, FileSystem& fs)
 {
   uint8_t  packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
   uint8_t  buffer[PACKET_1K_SIZE];
@@ -144,8 +149,8 @@ int sendFileBlocks(const char* fileName, FileSystem& fs)
   while (fileSize > 0) {
 
     // Leer datos del archivo en bloques
-    int err = readFileBlock(fileName, fs, buffer, fileSize, offset);
-    if (err != 0) {
+    YmodemPacketStatus err = readFileBlock(fileName, fs, buffer, fileSize, offset);
+    if (err != YMODEM_READ_FILE_OK) {
       return err; // Error al leer el bloque
     }
 
@@ -154,45 +159,45 @@ int sendFileBlocks(const char* fileName, FileSystem& fs)
 
     // Enviar el paquete y manejar la respuesta
     err = sendPacketAndHandleResponse(packet_data, blkNumber, fileSize, offset, totalSize, startTime);
-    if (err != 0) {
+    if (err != YMODEM_RECEIVED_OK) {
       return err; // Error al enviar el paquete
     }
     blkNumber++;
   }
   uart_write_bytes(UART_NUM_0, "\n", 1); // Finalizar con una nueva línea
-  return 0;                              // Éxito
+  return YMODEM_TRANSMIT_OK;             // Éxito
 }
 
-int sendEOT()
+YmodemPacketStatus sendEOT()
 {
-  int err;
+  YmodemPacketStatus err;
 
   send_EOT();
   do {
     // Wait for Ack
-    err = Ymodem_WaitResponse(ACK, 10);
-    if (err == 3) { // NAK
+    err = Ymodem_WaitResponse(ACK);
+    if (err == YMODEM_RECEIVED_NAK) { // NAK
       send_EOT();
     }
-    else if (err == 0 || err == 4) {
+    else if (err == YMODEM_TIMEOUT || err == YMODEM_INVALID_HEADER) {
       send_CA();
-      return -6; // timeout or wrong response
+      return err; // timeout or wrong response
     }
-    else if (err == 2)
-      return -7; // abort
-  } while (err != 1);
+    else if (err == YMODEM_ABORTED_BY_SENDER)
+      return err; // abort
+  } while (err != YMODEM_RECEIVED_CORRECT);
 
-  return 0;
+  return YMODEM_RECEIVED_OK; // Success
 }
 
-int sendLastPacket()
+YmodemPacketStatus sendLastPacket()
 {
   uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
-  int     err;
 
-  if (Ymodem_WaitResponse(CRC16, 10) != 1) {
+  YmodemPacketStatus err = Ymodem_WaitResponse(CRC16);
+  if (err != YMODEM_RECEIVED_CORRECT) {
     send_CA();
-    return -8;
+    return err;
   }
 
   LED_toggle();
@@ -201,18 +206,18 @@ int sendLastPacket()
     // Send Packet
     uart_write_bytes(EX_UART_NUM, (char*)packet_data, PACKET_SIZE + PACKET_OVERHEAD);
     // Wait for Ack
-    err = Ymodem_WaitResponse(ACK, 10);
-    if (err == 0 || err == 4) {
+    err = Ymodem_WaitResponse(ACK);
+    if (err == YMODEM_TIMEOUT || err == YMODEM_INVALID_HEADER) {
       send_CA();
-      return -9; // timeout or wrong response
+      return err; // timeout or wrong response
     }
-    else if (err == 2)
-      return -10; // abort
-  } while (err != 1);
+    else if (err == YMODEM_ABORTED_BY_SENDER)
+      return err; // abort
+  } while (err != YMODEM_RECEIVED_CORRECT);
 
 #if YMODEM_LED_ACT
   digitalWrite(YMODEM_LED_ACT, YMODEM_LED_ACT_ON ^ 1);
 #endif
 
-  return 0;
+  return YMODEM_RECEIVED_OK; // Success
 }
