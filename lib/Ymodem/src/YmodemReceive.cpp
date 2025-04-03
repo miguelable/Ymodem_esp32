@@ -14,7 +14,7 @@
  */
 #include "YmodemReceive.h"
 
-int processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size, unsigned int* errors)
+ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size)
 {
   static unsigned int file_len = 0;
 
@@ -29,12 +29,12 @@ int processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, un
     int written_bytes = ffd.write(packet_data + PACKET_HEADER, write_len);
     if (written_bytes != write_len) {
       send_CA();
-      return -6;
+      return PACKET_ERROR_WRITING;
     }
     LED_toggle();
   }
   send_ACK();
-  return 0;
+  return PACKET_OK;
 }
 
 void handleEOFPacket(unsigned int* file_done, unsigned int* errors)
@@ -89,47 +89,47 @@ void extractFileInfo(uint8_t* packet_data, char* getname, int* size)
   }
 }
 
-int processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors)
+ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length, unsigned int maxsize, char* getname, int* size, unsigned int* errors)
 {
   if (packet_data[PACKET_HEADER] != 0) { // Paquete válido
     extractFileInfo(packet_data, getname, size);
     if (*size < 1 || *size > maxsize) {
       send_CA();
-      return (*size > maxsize) ? -9 : -4;
+      return (*size > maxsize) ? PACKET_SIZE_OVERFLOW : PACKET_SIZE_NULL;
     }
     send_ACKCRC16();
-    return 0;
+    return PACKET_OK;
   }
   else { // Paquete de encabezado vacío
     (*errors)++;
     if (*errors > 5) {
       send_CA();
-      return -5;
+      return PACKET_MAX_ERRORS;
     }
     send_NAK();
-    return 0;
+    return PACKET_OK;
   }
 }
 
-int processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname, unsigned int packets_received,
-                  int* size, unsigned int* file_done, unsigned int* errors)
+ReceivePacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int maxsize, char* getname,
+                                  unsigned int packets_received, int* size, unsigned int* file_done, unsigned int* errors)
 {
   if (packet_length == 0) { // Paquete EOF
     handleEOFPacket(file_done, errors);
-    return 0;
+    return PACKET_OK;
   }
   else if (packet_length == -1) { // Abortado por transmisor
     send_ACK();
-    return -1;
+    return PACKET_ABORTED;
   }
   else if (packet_length == -2) { // Error de recepción
     (*errors)++;
     if (*errors > 5) {
       send_CA();
-      return -2;
+      return PACKET_MAX_ERRORS;
     }
     send_NAK();
-    return 0;
+    return PACKET_OK;
   }
 
   // Paquete normal
@@ -137,7 +137,7 @@ int processPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsign
     return processHeaderPacket(packet_data, packet_length, maxsize, getname, size, errors);
   }
   else {
-    return processDataPacket(packet_data, packet_length, ffd, *size, errors);
+    return processDataPacket(packet_data, packet_length, ffd, *size);
   }
 }
 
@@ -151,23 +151,23 @@ int handleFileSession(fs::File& ffd, unsigned int maxsize, char* getname, unsign
     int     packet_length = 0;
     uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
 
-    int result = Receive_Packet(packet_data, &packet_length, NAK_TIMEOUT);
-    if (result == 0) { // Paquete recibido correctamente
+    ReceivePacketStatus result = ReceiveAndValidatePacket(packet_data, &packet_length, NAK_TIMEOUT);
+    if (result == PACKET_OK) {
       int process_result = processPacket(packet_data, packet_length, ffd, maxsize, getname, packets_received, &size, &file_done, errors);
-      if (process_result < 0) {
+      if (process_result != PACKET_OK) {
         return process_result; // Error durante el procesamiento
       }
       packets_received++;
     }
-    else if (result == -2) { // Usuario abortó
+    else if (result == PACKET_ABORTED) {
       send_CA();
-      return -7;
+      return PACKET_ABORTED;
     }
     else { // Timeout o error
       (*errors)++;
       if (*errors > MAX_ERRORS) {
         send_CA();
-        return -8;
+        return PACKET_MAX_ERRORS;
       }
       send_CRC16();
     }
