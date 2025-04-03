@@ -29,7 +29,7 @@
  * @param file_size Total size of the file being received.
  * @param errors Pointer to an unsigned int where the error count will be updated.
  * @return ReceivePacketStatus Status of the packet processing.
- *         - PACKET_OK: Packet processed successfully.
+ *         - PACKET_RECEIVED_OK: Packet processed successfully.
  *         - PACKET_ERROR_WRITING: Error writing to the file in the filesystem.
  */
 ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, fs::File& ffd, unsigned int file_size);
@@ -70,7 +70,7 @@ void extractFileInfo(uint8_t* packet_data, char* getname, int* size);
  * @param size Pointer to an integer where the file size will be stored.
  * @param errors Pointer to an unsigned integer where the error count will be stored.
  * @return ReceivePacketStatus Status of the packet processing.
- *         - PACKET_OK: Packet processed successfully.
+ *         - PACKET_RECEIVED_OK: Packet processed successfully.
  *         - PACKET_SIZE_OVERFLOW: File size exceeds the maximum allowed size.
  *         - PACKET_SIZE_NULL: File size is null or invalid.
  *         - PACKET_MAX_ERRORS: Maximum number of errors reached.

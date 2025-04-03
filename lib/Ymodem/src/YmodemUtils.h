@@ -43,7 +43,7 @@ enum PacketLengthStatus : int8_t
 
 enum ReceivePacketStatus : int8_t
 {
-  PACKET_OK              = 0,   // Packet received successfully
+  PACKET_RECEIVED_OK     = 0,   // Packet received successfully
   PACKET_INVALID_CA      = -1,  // Error reading byte (invalid CA sequence)
   PACKET_INVALID_HEADER  = -2,  // Error reading byte (invalid header)
   PACKET_TIMEOUT         = -3,  // Error reading byte (timeout)
@@ -56,6 +56,14 @@ enum ReceivePacketStatus : int8_t
   PACKET_SIZE_OVERFLOW   = -10, // Packet size overflow
   PACKET_SIZE_NULL       = -11, // Packet size is null
   PACKET_MAX_ERRORS      = -12, // Maximum errors reached
+};
+
+enum TransmitPacketStatus : int8_t
+{
+  PACKET_TRANSMIT_OK      = 0,  // Packet transmitted successfully
+  PACKET_TRANSMIT_ERROR   = -1, // Error during packet transmission
+  PACKET_TRANSMIT_TIMEOUT = -2, // Timeout during packet transmission
+  PACKET_TRANSMIT_ABORTED = -3  // Transmission aborted
 };
 
 /**

@@ -34,7 +34,7 @@ ReceivePacketStatus processDataPacket(uint8_t* packet_data, int packet_length, f
     LED_toggle();
   }
   send_ACK();
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 void handleEOFPacket(unsigned int* file_done, unsigned int* errors)
@@ -98,7 +98,7 @@ ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length,
       return (*size > maxsize) ? PACKET_SIZE_OVERFLOW : PACKET_SIZE_NULL;
     }
     send_ACKCRC16();
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
   else { // Paquete de encabezado vacío
     (*errors)++;
@@ -107,7 +107,7 @@ ReceivePacketStatus processHeaderPacket(uint8_t* packet_data, int packet_length,
       return PACKET_MAX_ERRORS;
     }
     send_NAK();
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
 }
 
@@ -116,7 +116,7 @@ ReceivePacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::F
 {
   if (packet_length == 0) { // Paquete EOF
     handleEOFPacket(file_done, errors);
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
   else if (packet_length == -1) { // Abortado por transmisor
     send_ACK();
@@ -129,7 +129,7 @@ ReceivePacketStatus processPacket(uint8_t* packet_data, int packet_length, fs::F
       return PACKET_MAX_ERRORS;
     }
     send_NAK();
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
 
   // Paquete normal
@@ -152,9 +152,9 @@ int handleFileSession(fs::File& ffd, unsigned int maxsize, char* getname, unsign
     uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
 
     ReceivePacketStatus result = ReceiveAndValidatePacket(packet_data, &packet_length, NAK_TIMEOUT);
-    if (result == PACKET_OK) {
+    if (result == PACKET_RECEIVED_OK) {
       int process_result = processPacket(packet_data, packet_length, ffd, maxsize, getname, packets_received, &size, &file_done, errors);
-      if (process_result != PACKET_OK) {
+      if (process_result != PACKET_RECEIVED_OK) {
         return process_result; // Error durante el procesamiento
       }
       packets_received++;

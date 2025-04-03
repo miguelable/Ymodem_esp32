@@ -145,13 +145,13 @@ void handleSTX(int* packet_size)
  *
  * @param length Pointer to an integer where the EOT packet identifier will be stored.
  *               This is set to the value of PACKET_EOT.
- * @return ReceivePacketStatus Returns PACKET_OK to indicate successful handling of the EOT signal.
+ * @return ReceivePacketStatus Returns PACKET_RECEIVED_OK to indicate successful handling of the EOT signal.
  */
 ReceivePacketStatus handleEOT(int* length)
 {
   *length = PACKET_EOT;
   send_ACK();
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 /**
@@ -167,7 +167,7 @@ ReceivePacketStatus handleEOT(int* length)
  * @param length Pointer to an integer where the length of the packet will be stored.
  * @return ReceivePacketStatus
  *         - PACKET_TIMEOUT: If no byte is received within the timeout period.
- *         - PACKET_OK: If the received byte matches the CA character and ACK is sent.
+ *         - PACKET_RECEIVED_OK: If the received byte matches the CA character and ACK is sent.
  *         - PACKET_INVALID_HEADER: If the received byte does not match the CA character.
  */
 ReceivePacketStatus handleCA(unsigned char* ch, uint32_t timeout, int* length)
@@ -178,7 +178,7 @@ ReceivePacketStatus handleCA(unsigned char* ch, uint32_t timeout, int* length)
   if (*ch == CA) {
     *length = PACKET_ABORT;
     send_ACK();
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
   return PACKET_INVALID_HEADER;
 }
@@ -221,7 +221,7 @@ ReceivePacketStatus handleInvalidHeader()
  *
  * @param[out] ch Pointer to a variable where the received byte will be stored.
  * @param[in] timeout The maximum time (in milliseconds) to wait for the byte.
- * @return PACKET_OK if the byte was successfully received,
+ * @return PACKET_RECEIVED_OK if the byte was successfully received,
  *         PACKET_TIMEOUT if the operation timed out.
  */
 ReceivePacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
@@ -229,7 +229,7 @@ ReceivePacketStatus ReceiveInitialByte(unsigned char* ch, uint32_t timeout)
   if (Receive_Byte(ch, timeout) < 0) {
     return PACKET_TIMEOUT;
   }
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 /**
@@ -272,7 +272,7 @@ ReceivePacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* 
   }
 
   *data = (uint8_t)ch;
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 /**
@@ -289,7 +289,7 @@ ReceivePacketStatus HandlePacketHeader(unsigned char ch, int* packet_size, int* 
  * @param packet_size The size of the packet to be read (excluding overhead).
  * @param timeout The timeout duration (in milliseconds) for receiving each byte.
  *
- * @return PACKET_OK if the packet is successfully read.
+ * @return PACKET_RECEIVED_OK if the packet is successfully read.
  *         PACKET_TIMEOUT if a timeout occurs while receiving a byte.
  *         PACKET_BUFFER_OVERFLOW if the buffer size is exceeded.
  */
@@ -308,7 +308,7 @@ ReceivePacketStatus ReadPacketData(uint8_t* data, int packet_size, uint32_t time
     *dptr++ = (uint8_t)ch;
   }
 
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 /**
@@ -320,25 +320,25 @@ ReceivePacketStatus ReadPacketData(uint8_t* data, int packet_size, uint32_t time
  *               - If the sequence number is invalid, it will store PACKET_SEQ_ERROR.
  *               - If the CRC check fails, it will store PACKET_CRC_ERROR.
  *               - Otherwise, it will store the packet size.
- * @return PACKET_OK if the packet is valid or if an error is detected.
+ * @return PACKET_RECEIVED_OK if the packet is valid or if an error is detected.
  *
- * @note The function always returns PACKET_OK, but the actual status is indicated
+ * @note The function always returns PACKET_RECEIVED_OK, but the actual status is indicated
  *         through the `length` parameter.
  */
 ReceivePacketStatus ValidatePacket(uint8_t* data, int packet_size, int* length)
 {
   if (data[PACKET_SEQNO_INDEX] != ((data[PACKET_SEQNO_COMP_INDEX] ^ 0xff) & 0xff)) {
     *length = PACKET_SEQ_INVALID;
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
 
   if (crc16(&data[PACKET_HEADER], packet_size + PACKET_TRAILER) != 0) {
     *length = PACKET_CRC_INVALID;
-    return PACKET_OK;
+    return PACKET_RECEIVED_OK;
   }
 
   *length = packet_size;
-  return PACKET_OK;
+  return PACKET_RECEIVED_OK;
 }
 
 ReceivePacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_t timeout)
@@ -350,19 +350,19 @@ ReceivePacketStatus ReceiveAndValidatePacket(uint8_t* data, int* length, uint32_
 
   // Receive the initial byte
   ReceivePacketStatus status = ReceiveInitialByte(&ch, timeout);
-  if (status != PACKET_OK) {
+  if (status != PACKET_RECEIVED_OK) {
     return status;
   }
 
   // Handle the packet header (SOH, STX, EOT, CA, ABORT)
   status = HandlePacketHeader(ch, &packet_size, length, timeout, data);
-  if (status != PACKET_OK) {
+  if (status != PACKET_RECEIVED_OK) {
     return status;
   }
 
   // Read the packet data
   status = ReadPacketData(data, packet_size, timeout);
-  if (status != PACKET_OK) {
+  if (status != PACKET_RECEIVED_OK) {
     return status;
   }
 
