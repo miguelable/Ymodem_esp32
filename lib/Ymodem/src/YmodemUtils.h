@@ -35,23 +35,27 @@ enum ByteOperationStatus : int8_t
 
 enum PacketLengthStatus : int8_t
 {
-  PACKET_EOT       = 0,  // End of transmission
-  PACKET_ABORT   = -1, // Abort by sender (CAN character)
+  PACKET_EOT         = 0,  // End of transmission
+  PACKET_ABORT       = -1, // Abort by sender (CAN character)
   PACKET_SEQ_INVALID = -2, // Paquet sequence error (invalid sequence number)
   PACKET_CRC_INVALID = -3  // Packet CRC error (invalid checksum)
 };
 
 enum ReceivePacketStatus : int8_t
 {
-  PACKET_OK              = 0,  // Packet received successfully
-  PACKET_INVALID_CA      = -1, // Error reading byte (invalid CA sequence)
-  PACKET_INVALID_HEADER  = -2, // Error reading byte (invalid header)
-  PACKET_TIMEOUT         = -3, // Error reading byte (timeout)
-  PACKET_SECOND_TIMEOUT  = -4, // Error reading second confirmation byte (timeout)
-  PACKET_ABORTED         = -5, // Transmission aborted by sender
-  PACKET_SEQ_ERROR       = -6, // Error in the packet sequence number
-  PACKET_CRC_ERROR       = -7, // Error in the packet CRC
-  PACKET_BUFFER_OVERFLOW = -8  // Buffer overflow
+  PACKET_OK              = 0,   // Packet received successfully
+  PACKET_INVALID_CA      = -1,  // Error reading byte (invalid CA sequence)
+  PACKET_INVALID_HEADER  = -2,  // Error reading byte (invalid header)
+  PACKET_TIMEOUT         = -3,  // Error reading byte (timeout)
+  PACKET_SECOND_TIMEOUT  = -4,  // Error reading second confirmation byte (timeout)
+  PACKET_ABORTED         = -5,  // Transmission aborted by sender
+  PACKET_SEQ_ERROR       = -6,  // Error in the packet sequence number
+  PACKET_CRC_ERROR       = -7,  // Error in the packet CRC
+  PACKET_BUFFER_OVERFLOW = -8,  // Buffer overflow
+  PACKET_ERROR_WRITING   = -9,  // Error writing to file
+  PACKET_SIZE_OVERFLOW   = -10, // Packet size overflow
+  PACKET_SIZE_NULL       = -11, // Packet size is null
+  PACKET_MAX_ERRORS      = -12, // Maximum errors reached
 };
 
 /**
@@ -93,7 +97,7 @@ ByteOperationStatus Receive_Byte(unsigned char* c, uint32_t timeout);
 
 /**
  * @brief Sends an End Of Transmission (EOT) signal.
- * 
+ *
  * This function is used to indicate the end of data transmission
  * in communication protocols such as YMODEM. It typically signals
  * the receiver that no more data will be sent.
